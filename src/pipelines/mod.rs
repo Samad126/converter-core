@@ -1,4 +1,5 @@
 //! Conversion routes. Each returns the files it produced, on disk in `ctx.out_dir`.
+mod image;
 mod office;
 mod simple;
 
@@ -30,6 +31,7 @@ pub async fn run(ctx: &Ctx<'_>, conv: &Resolved) -> Result<Vec<PathBuf>> {
         Engine::Soffice if conv.target.mode == "raster" => office::raster(ctx, conv).await,
         Engine::Soffice => office::direct(ctx, conv).await,
         Engine::Pandoc => simple::pandoc(ctx, conv).await,
+        Engine::Ffmpeg if image::can_handle(conv) => image::run(ctx, conv).await,
         Engine::Ffmpeg => simple::ffmpeg(ctx, conv).await,
         Engine::Heif => simple::heif(ctx, conv).await,
         Engine::Assimp => simple::assimp(ctx, conv).await,

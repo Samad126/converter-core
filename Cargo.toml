@@ -20,3 +20,4 @@ clap = { version = "4", features = ["derive"] }
 dirs = "6"
 which = "8"
 zip = { version = "2", default-features = false, features = ["deflate"] }
+image = { version = "0.25", default-features = false, features = ["bmp", "gif", "ico", "jpeg", "png", "qoi", "tga", "tiff", "webp"] }
