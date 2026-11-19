@@ -48,3 +48,34 @@ jobs:
           ls -l "$RUNNER_TEMP"
           head -c 5 "$RUNNER_TEMP/hello.pdf" | grep -q '%PDF'
           test -s "$RUNNER_TEMP/hello.docx"
+
+  # Calibre is the heaviest engine and has a different package type on every platform (tarball / MSI / DMG).
+  calibre:
+    name: Calibre install + convert (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Engines folder for this run
+        shell: bash
+        run: echo "CONVERTER_ENGINES_DIR=$RUNNER_TEMP/engines" >> "$GITHUB_ENV"
+      - name: Install Calibre through the app's installer
+        shell: bash
+        run: |
+          cargo run -q --bin converter -- engines install calibre
+          cargo run -q --bin converter -- engines list | tee list.txt
+          grep -E "^calibre +installed" list.txt | grep -q "engines"   # it must be OUR copy
+      - name: Convert an ebook with it
+        shell: bash
+        run: |
+          python3 tools/make_tiny_epub.py "$RUNNER_TEMP/book.epub"
+          cargo run -q --bin converter -- convert mobi "$RUNNER_TEMP/book.epub"
+          cargo run -q --bin converter -- convert azw3 "$RUNNER_TEMP/book.epub"
+          ls -l "$RUNNER_TEMP"
+          test -s "$RUNNER_TEMP/book.mobi"
+          test -s "$RUNNER_TEMP/book.azw3"

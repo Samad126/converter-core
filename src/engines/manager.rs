@@ -293,6 +293,11 @@ mod tests {
         for plat in ["windows-x64", "macos-x64", "macos-arm64"] { assert!(lo.platforms.contains_key(plat), "{plat}"); }
         assert!(lo.platforms["windows-x64"].url.contains("download.documentfoundation.org"), "official source only");
     }
+    #[test] fn calibre_is_downloadable_on_every_platform() {
+        let c = &manifest().engines["calibre"];
+        for plat in ["linux-x64", "linux-arm64", "windows-x64", "macos-x64", "macos-arm64"] { assert!(c.platforms.contains_key(plat), "{plat}"); }
+        assert!(c.platforms.values().all(|p| p.url.starts_with("https://github.com/kovidgoyal/calibre/")), "official source only");
+    }
     #[cfg(not(windows))]
     #[test] fn msi_is_refused_off_windows_and_dmg_off_macos_with_a_clear_message() {
         let d = tmpdir("kinds"); let f = d.join("x.bin"); std::fs::write(&f, "x").unwrap();

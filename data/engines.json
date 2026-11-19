@@ -172,6 +172,41 @@
           "url": "https://download.documentfoundation.org/libreoffice/stable/26.2.7/mac/aarch64/LibreOffice_26.2.7_MacOS_aarch64.dmg"
         }
       }
+    },
+    "calibre": {
+      "version": "9.18.0",
+      "platforms": {
+        "linux-x64": {
+          "kind": "tar.xz",
+          "size": 240948148,
+          "sha256": "da638166fb3dd204be77cf0f871a40d803536b3e5948969c5233b8e4f1e1dbe6",
+          "url": "https://github.com/kovidgoyal/calibre/releases/download/v9.18.0/calibre-9.18.0-x86_64.txz"
+        },
+        "linux-arm64": {
+          "kind": "tar.xz",
+          "size": 227149592,
+          "sha256": "7f29f1786dcfc5b6f3b6d29b245998a6701501169fbd4c853f17c35d3a635e91",
+          "url": "https://github.com/kovidgoyal/calibre/releases/download/v9.18.0/calibre-9.18.0-arm64.txz"
+        },
+        "windows-x64": {
+          "kind": "msi",
+          "size": 291291136,
+          "sha256": "05c0f2223866f8082e05b2d4bc9c57b31a833de8355a1191fd79c260c2636d38",
+          "url": "https://github.com/kovidgoyal/calibre/releases/download/v9.18.0/calibre-64bit-9.18.0.msi"
+        },
+        "macos-x64": {
+          "kind": "dmg",
+          "size": 406181327,
+          "sha256": "b4b8000433b6e4d0fdfb3bd0283cd76b7525c65daf5af027ec4dc1e629ef3d0c",
+          "url": "https://github.com/kovidgoyal/calibre/releases/download/v9.18.0/calibre-9.18.0.dmg"
+        },
+        "macos-arm64": {
+          "kind": "dmg",
+          "size": 406181327,
+          "sha256": "b4b8000433b6e4d0fdfb3bd0283cd76b7525c65daf5af027ec4dc1e629ef3d0c",
+          "url": "https://github.com/kovidgoyal/calibre/releases/download/v9.18.0/calibre-9.18.0.dmg"
+        }
+      }
     }
   }
 }
