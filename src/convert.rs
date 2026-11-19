@@ -69,7 +69,9 @@ pub async fn convert_file(cfg: &Config, input: &Path, target: &str, opts: Conver
         let mut zip = zip::ZipWriter::new(file);
         let opt = zip::write::SimpleFileOptions::default();
         for p in &produced {
-            let name = p.file_name().unwrap().to_string_lossy().into_owned();
+            // Keep sub-folders (PSD group folders); files from elsewhere in the workspace fall back to their name.
+            let name = p.strip_prefix(&ctx.out_dir).ok().map(|r| r.components().map(|c| c.as_os_str().to_string_lossy().into_owned()).collect::<Vec<_>>().join("/"))
+                .unwrap_or_else(|| p.file_name().unwrap().to_string_lossy().into_owned());
             zip.start_file(name, opt).map_err(|e| Error::new(ErrorCode::EInternal, e.to_string()))?;
             zip.write_all(&std::fs::read(p)?)?;
         }

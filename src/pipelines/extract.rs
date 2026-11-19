@@ -8,6 +8,7 @@ const DOCUMENT_PART: &str = "word/document.xml";
 pub async fn run(ctx: &Ctx<'_>, conv: &Resolved) -> Result<Vec<PathBuf>> {
     match conv.target.id.as_str() {
         "tables" => tables(ctx, conv).await,
+        "layers" => layers(ctx).await,
         other => Err(Error::new(ErrorCode::EUnsupported, format!("Extracting \"{other}\" is not available in this build yet."))),
     }
 }
@@ -46,4 +47,23 @@ async fn tables(ctx: &Ctx<'_>, conv: &Resolved) -> Result<Vec<PathBuf>> {
         xlsx::build(&sheets, &out2)
     }).await.map_err(|e| Error::new(ErrorCode::EInternal, e.to_string()))??;
     Ok(vec![out])
+}
+
+async fn layers(ctx: &Ctx<'_>) -> Result<Vec<PathBuf>> {
+    let (input, cfg, out_dir) = (ctx.input.clone(), ctx.cfg.clone(), ctx.out_dir.clone());
+    tokio::task::spawn_blocking(move || -> Result<Vec<PathBuf>> {
+        let bytes = std::fs::read(&input)?;
+        let ex = crate::extract::psd_layers::extract(&bytes, &cfg)?;
+        let mut written = vec![];
+        let mut put = |rel: &str, data: &[u8]| -> Result<()> {
+            let p = out_dir.join(rel);
+            if let Some(parent) = p.parent() { std::fs::create_dir_all(parent)?; }
+            std::fs::write(&p, data)?;
+            written.push(p);
+            Ok(())
+        };
+        for (name, data) in &ex.files { put(name, data)?; }
+        put(crate::extract::psd_layers::MANIFEST_FILENAME, &crate::extract::psd_layers::manifest_json(&ex.manifest))?;
+        Ok(written)
+    }).await.map_err(|e| Error::new(ErrorCode::EInternal, e.to_string()))?
 }
