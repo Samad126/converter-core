@@ -25,3 +25,4 @@ serde_yaml_ng = "0.10"
 toml = { version = "0.9", features = ["preserve_order"] }
 quick-xml = "0.38"
 rusqlite = { version = "0.37", features = ["bundled"] }
+mail-parser = "0.11"

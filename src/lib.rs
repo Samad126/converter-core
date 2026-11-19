@@ -2,6 +2,7 @@
 pub mod config;
 pub mod convert;
 pub mod data;
+pub mod email;
 pub mod engines;
 pub mod error;
 pub mod formats;
