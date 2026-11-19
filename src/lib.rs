@@ -8,6 +8,8 @@ pub mod error;
 pub mod extract;
 pub mod formats;
 pub mod media;
+pub mod pdf;
+pub mod pdf_cli;
 pub mod pipelines;
 pub mod progress;
 pub mod process;

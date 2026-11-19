@@ -18,6 +18,12 @@ enum Cmd {
     Media { target: String, input: std::path::PathBuf, #[arg(long)] out: Option<std::path::PathBuf> },
     /// Download a YouTube video: converter youtube <mp3|mp4> <url> [--out DIR]
     Youtube { target: String, url: String, #[arg(long)] out: Option<std::path::PathBuf> },
+    /// PDF tools: converter pdf <merge|split|extract|remove|organize|rotate|crop|protect|unlock|repair|compress> <files...> [--pages 1-3] [--out DIR] ...
+    Pdf { op: String, files: Vec<std::path::PathBuf>,
+          #[arg(long)] out: Option<std::path::PathBuf>, #[arg(long)] pages: Option<String>, #[arg(long)] order: Option<String>,
+          #[arg(long)] every: Option<String>, #[arg(long)] degrees: Option<String>, #[arg(long)] password: Option<String>,
+          #[arg(long)] level: Option<String>, #[arg(long)] left: Option<String>, #[arg(long)] right: Option<String>,
+          #[arg(long)] top: Option<String>, #[arg(long)] bottom: Option<String> },
     /// Show which external tools are installed and how to get the missing ones.
     Doctor,
 }
@@ -64,6 +70,16 @@ async fn main() {
             match converter_core::youtube::download(&cfg, &url, t, &dir, progress).await {
                 Ok(f) => { eprintln!(); println!("{}", f.display()); }
                 Err(e) => { eprintln!("\n{}: {}", e.code.as_str(), e.message); std::process::exit(1); }
+            }
+        }
+        Cmd::Pdf { op, files, out, pages, order, every, degrees, password, level, left, right, top, bottom } => {
+            let cfg = Config::default();
+            let flag = |n: &str| match n { "pages" => pages.clone(), "order" => order.clone(), "every" => every.clone(), "degrees" => degrees.clone(),
+                "password" => password.clone(), "level" => level.clone(), "left" => left.clone(), "right" => right.clone(),
+                "top" => top.clone(), "bottom" => bottom.clone(), _ => None };
+            match converter_core::pdf_cli::run(&cfg, &op, &files, &flag, out).await {
+                Ok(fs) => for f in fs { println!("{}", f.display()); },
+                Err(e) => { eprintln!("{}: {}", e.code.as_str(), e.message); std::process::exit(1); }
             }
         }
         Cmd::Doctor => {
