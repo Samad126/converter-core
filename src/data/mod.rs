@@ -59,7 +59,7 @@ fn records_to_table(records: &[Value]) -> Vec<Vec<String>> {
 }
 
 /// JavaScript has one number type, so `25.0` reads back as `25`. Match that.
-fn normalize_numbers(v: &mut Value) {
+pub(crate) fn normalize_numbers(v: &mut Value) {
     match v {
         Value::Number(n) => if let Some(f) = n.as_f64() {
             if n.is_f64() && f.fract() == 0.0 && f.abs() < 9_007_199_254_740_992.0 { *v = Value::from(f as i64); }

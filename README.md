@@ -21,7 +21,7 @@ cargo run --bin converter -- pdf fill-form form.pdf --values values.json [--flat
 `tools/dump-formats.mjs` (expects the backend checkout at `../backend`).
 
 Status: early. Ported so far: format matrix, engine discovery, LibreOffice (direct + raster),
-pandoc, ffmpeg stills, heif, assimp, Calibre, native images, audio/video with progress, YouTube download (mp3/mp4 via yt-dlp), PDF->Word/PPT/Excel/Markdown and fonts (via the bundled Python scripts), Word tables to XLSX, email (.eml), archives (zip/tar/tar.gz/tar.bz2/tar.zst/7z via 7z, with bomb/traversal/symlink checks), data formats (CSV/TSV/JSON/JSONL/YAML/TOML/INI/XML/SQLite). PDF page tools (merge, split, extract, remove, organize, rotate, crop, watermark, page numbers, scan-to-PDF, edit, sign, form fields, fill-form with flatten, redact, compare, OCR; protect, unlock, repair, compress via qpdf). Not yet: Parquet/ORC/Feather,
+pandoc, ffmpeg stills, heif, assimp, Calibre, native images, audio/video with progress, YouTube download (mp3/mp4 via yt-dlp), PDF->Word/PPT/Excel/Markdown, fonts and Parquet/ORC/Feather (via the bundled Python scripts), Word tables to XLSX, email (.eml), archives (zip/tar/tar.gz/tar.bz2/tar.zst/7z via 7z, with bomb/traversal/symlink checks), data formats (CSV/TSV/JSON/JSONL/YAML/TOML/INI/XML/SQLite). PDF page tools (merge, split, extract, remove, organize, rotate, crop, watermark, page numbers, scan-to-PDF, edit, sign, form fields, fill-form with flatten, redact, compare, OCR; protect, unlock, repair, compress via qpdf). Not yet:
 PSD layer extraction, PSD layers.
 
 Python routes need `python3` plus `pdf2docx pdfplumber python-pptx openpyxl python-docx` (PDF) or `fonttools brotli` (fonts).
