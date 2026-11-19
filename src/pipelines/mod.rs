@@ -2,6 +2,7 @@
 mod archive;
 mod data;
 mod email;
+mod extract;
 mod image;
 mod office;
 mod simple;
@@ -35,6 +36,7 @@ pub async fn run(ctx: &Ctx<'_>, conv: &Resolved) -> Result<Vec<PathBuf>> {
         Engine::Soffice => office::direct(ctx, conv).await,
         Engine::Archive => archive::run(ctx, conv).await,
         Engine::Email => email::run(ctx, conv).await,
+        Engine::Extract => extract::run(ctx, conv).await,
         Engine::Data => data::run(ctx, conv).await,
         Engine::Pandoc => simple::pandoc(ctx, conv).await,
         Engine::Ffmpeg if image::can_handle(conv) => image::run(ctx, conv).await,

@@ -5,6 +5,7 @@ pub mod data;
 pub mod email;
 pub mod engines;
 pub mod error;
+pub mod extract;
 pub mod formats;
 pub mod pipelines;
 pub mod process;

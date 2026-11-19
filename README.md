@@ -15,5 +15,5 @@ cargo run --bin converter -- convert pdf in.txt [--out DIR]   # same argument or
 `tools/dump-formats.mjs` (expects the backend checkout at `../backend`).
 
 Status: early. Ported so far: format matrix, engine discovery, LibreOffice (direct + raster),
-pandoc, ffmpeg stills, heif, assimp, Calibre, native images, email (.eml), archives (zip/tar/tar.gz/tar.bz2/tar.zst/7z via 7z, with bomb/traversal/symlink checks), data formats (CSV/TSV/JSON/JSONL/YAML/TOML/INI/XML/SQLite). Not yet: Parquet/ORC/Feather,
-PDF->Word/PPT/Excel, table/PSD extraction, fonts, media jobs, PDF tools.
+pandoc, ffmpeg stills, heif, assimp, Calibre, native images, Word tables to XLSX, email (.eml), archives (zip/tar/tar.gz/tar.bz2/tar.zst/7z via 7z, with bomb/traversal/symlink checks), data formats (CSV/TSV/JSON/JSONL/YAML/TOML/INI/XML/SQLite). Not yet: Parquet/ORC/Feather,
+PDF->Word/PPT/Excel, PSD layer extraction, fonts, media jobs, PDF tools.
