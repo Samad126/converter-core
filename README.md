@@ -7,6 +7,8 @@ machine and reports as missing (`E_ENGINE_MISSING`) rather than crashing.
 
 ```
 cargo run --bin converter -- doctor            # which engines are installed
+cargo run --bin converter -- engines list      # what can be downloaded on this platform
+cargo run --bin converter -- engines install pandoc   # pinned URL + SHA-256, no admin rights
 cargo run --bin converter -- formats .docx     # what a source can become
 cargo run --bin converter -- convert pdf in.txt [--out DIR]   # same argument order as the Node CLI
 cargo run --bin converter -- media mp3 song.wav       # progress on stderr
@@ -24,3 +26,8 @@ PSD layer extraction, PSD layers.
 
 Python routes need `python3` plus `pdf2docx pdfplumber python-pptx openpyxl python-docx` (PDF) or `fonttools brotli` (fonts).
 `CONVERTER_BIN_<TOOL>` (e.g. `CONVERTER_BIN_PYTHON`) points any engine at a specific executable.
+
+Engines are downloaded into the user's data folder (`CONVERTER_ENGINES_DIR` overrides it) from the pinned
+list in `data/engines.json` (url, sha256, size per platform). Lookup order: `CONVERTER_BIN_<TOOL>` -> our own
+downloaded copy -> `PATH`. Downloaded today: pandoc, qpdf, 7zip, yt-dlp, ffmpeg. Not yet downloadable
+(use a package manager): LibreOffice, Calibre, Tesseract, heif, assimp, Python packages.

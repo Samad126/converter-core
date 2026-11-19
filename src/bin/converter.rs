@@ -25,6 +25,8 @@ enum Cmd {
           #[arg(long)] level: Option<String>, #[arg(long)] left: Option<String>, #[arg(long)] right: Option<String>,
           #[arg(long)] top: Option<String>, #[arg(long)] bottom: Option<String>,
           #[arg(long)] text: Option<String>, #[arg(long)] position: Option<String>, #[arg(long)] start: Option<String>, #[arg(long)] elements: Option<String>, #[arg(long)] areas: Option<String>, #[arg(long)] force: Option<String>, #[arg(long)] values: Option<String>, #[arg(long)] flatten: Option<String> },
+    /// Manage engines: converter engines list | install <name> | remove <name>
+    Engines { action: String, name: Option<String> },
     /// Show which external tools are installed and how to get the missing ones.
     Doctor,
 }
@@ -82,6 +84,38 @@ async fn main() {
             match converter_core::pdf_cli::run(&cfg, &op, &files, &flag, out).await {
                 Ok(fs) => for f in fs { println!("{}", f.display()); },
                 Err(e) => { eprintln!("{}: {}", e.code.as_str(), e.message); std::process::exit(1); }
+            }
+        }
+        Cmd::Engines { action, name } => {
+            use converter_core::engines::manager;
+            let cfg = Config::default();
+            match (action.as_str(), name) {
+                ("list", _) => {
+                    println!("platform: {}   engines dir: {}", manager::current_platform(), cfg.engines_dir.display());
+                    for c in manager::catalog(&cfg) {
+                        let state = match (&c.installed_path, &c.downloadable) {
+                            (Some(p), _) => format!("installed  {}", p.display()),
+                            (None, Some(v)) => format!("available  v{v} ({:.1} MB)", c.size.unwrap_or(0) as f64 / 1_048_576.0),
+                            (None, None) => format!("missing    install with: {}", c.hint),
+                        };
+                        println!("{:<12} {}", c.name, state);
+                    }
+                }
+                ("install", Some(n)) => {
+                    let progress: converter_core::progress::ProgressFn = std::sync::Arc::new(|p| match p {
+                        converter_core::progress::Progress::Fraction(f) => eprint!("\r  downloading {:>3.0}%", f * 100.0),
+                        converter_core::progress::Progress::Stage(s) => eprint!("\n  {s}..."),
+                        _ => {} });
+                    match manager::install(&cfg, &n, progress).await {
+                        Ok(()) => eprintln!("\n  installed {n}"),
+                        Err(e) => { eprintln!("\n{}: {}", e.code.as_str(), e.message); std::process::exit(1); }
+                    }
+                }
+                ("remove", Some(n)) => match manager::remove(&cfg, &n).await {
+                    Ok(()) => eprintln!("removed {n}"),
+                    Err(e) => { eprintln!("{}: {}", e.code.as_str(), e.message); std::process::exit(1); }
+                },
+                _ => { eprintln!("usage: converter engines list | install <name> | remove <name>"); std::process::exit(2); }
             }
         }
         Cmd::Doctor => {

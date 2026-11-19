@@ -1,6 +1,8 @@
 //! External-tool discovery. Unlike the server's fail-fast preflight, a missing
 //! tool is a normal state here: it disables the conversions that need it and
 //! the UI offers to install it.
+pub mod manager;
+
 use crate::config::Config;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;

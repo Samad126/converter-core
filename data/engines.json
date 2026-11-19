@@ -1,0 +1,50 @@
+{
+  "_comment": "Pinned downloads: url + sha256 + size (bytes) per platform. Hashes are GitHub's own release-asset digests. kind: zip | tar.gz | tar.xz | file (single executable saved as `file_name`). Bump version/url/sha256/size together.",
+  "engines": {
+    "pandoc": {
+      "version": "3.14",
+      "platforms": {
+        "linux-x64":   { "kind": "tar.gz", "size": 36635549, "sha256": "c5f4720cdefb3f7bdc5d07202ef579feef0d1370773c873804dd8fdaa8c4f1b8", "url": "https://github.com/jgm/pandoc/releases/download/3.14/pandoc-3.14-linux-amd64.tar.gz" },
+        "linux-arm64": { "kind": "tar.gz", "size": 39208196, "sha256": "c692f3d78a415741bbbac4cdbbbe26fa7edca1f43d2301b982fbf4009cc8cf7f", "url": "https://github.com/jgm/pandoc/releases/download/3.14/pandoc-3.14-linux-arm64.tar.gz" },
+        "windows-x64": { "kind": "zip",    "size": 43614099, "sha256": "0144b96e8c7b023fd382ec5ef5bdc475e873f1019d6fa72502492df2c9a94a3b", "url": "https://github.com/jgm/pandoc/releases/download/3.14/pandoc-3.14-windows-x86_64.zip" },
+        "macos-x64":   { "kind": "zip",    "size": 27490795, "sha256": "891708579061e7b1c1a6ce0df30ebb3cb2b6d0ca045ed3c8554ab830c1e0c270", "url": "https://github.com/jgm/pandoc/releases/download/3.14/pandoc-3.14-x86_64-macOS.zip" },
+        "macos-arm64": { "kind": "zip",    "size": 43712865, "sha256": "58d6593884fec9d4424b641b92503c316d9c36decb2891ff8d73ae74dd3b6304", "url": "https://github.com/jgm/pandoc/releases/download/3.14/pandoc-3.14-arm64-macOS.zip" }
+      }
+    },
+    "qpdf": {
+      "version": "12.4.2",
+      "platforms": {
+        "linux-x64":   { "kind": "zip", "size": 4040257,  "sha256": "db367d897829f22c4198ce1094143c9d467bd6ee7dfabc44ba6f02056b24f8b1", "url": "https://github.com/qpdf/qpdf/releases/download/v12.4.2/qpdf-12.4.2-bin-linux-x86_64.zip" },
+        "windows-x64": { "kind": "zip", "size": 28183147, "sha256": "db87077e683630c1217e0e8f9a20a9749d952ab676e881c3689187763a5de25d", "url": "https://github.com/qpdf/qpdf/releases/download/v12.4.2/qpdf-12.4.2-msvc64.zip" },
+        "macos-x64":   { "kind": "zip", "size": 2975560,  "sha256": "dd3b01f4414d198529bb0f13bba59c2f016a328bb3506695087a96fb80fc1481", "url": "https://github.com/qpdf/qpdf/releases/download/v12.4.2/qpdf-12.4.2-bin-macos-x86_64.zip" },
+        "macos-arm64": { "kind": "zip", "size": 3269125,  "sha256": "62e46987a30ea167cbc530ccb22690aec3d8c812ed09979a941bcee92e504b79", "url": "https://github.com/qpdf/qpdf/releases/download/v12.4.2/qpdf-12.4.2-bin-macos-arm64.zip" }
+      }
+    },
+    "7zip": {
+      "version": "26.06",
+      "platforms": {
+        "linux-x64":   { "kind": "tar.xz", "size": 1575552, "sha256": "2b539cf067b2ad48e1baa5093dbaa8818b73542d1222a0ffde9dc5f2922ea62e", "url": "https://github.com/ip7z/7zip/releases/download/26.06/7z2606-linux-x64.tar.xz" },
+        "linux-arm64": { "kind": "tar.xz", "size": 1326668, "sha256": "edcc408aacce77da5223728f2eceb5e9f6dc713b8a9df934ad21e2a7f7560627", "url": "https://github.com/ip7z/7zip/releases/download/26.06/7z2606-linux-arm64.tar.xz" },
+        "macos-x64":   { "kind": "tar.xz", "size": 1025228, "sha256": "3af68b124052da7fc2a246c96b0bea6a68bfee389baa788f4cead1a133445586", "url": "https://github.com/ip7z/7zip/releases/download/26.06/7z2606-mac-x64.tar.xz" },
+        "macos-arm64": { "kind": "tar.xz", "size": 965712,  "sha256": "b6f17920b4240940461dac8ef4009891881ac44d2a5ead625ede2ec8472185dd", "url": "https://github.com/ip7z/7zip/releases/download/26.06/7z2606-mac.tar.xz" }
+      }
+    },
+    "yt-dlp": {
+      "version": "2026.10.26",
+      "platforms": {
+        "linux-x64":   { "kind": "file", "file_name": "yt-dlp",     "size": 41166968, "sha256": "767ba9dce7052aa196f8b12652f433d76de128ba168966fa84b6394d5e6c6795", "url": "https://github.com/yt-dlp/yt-dlp/releases/download/2026.10.26/yt-dlp_linux" },
+        "windows-x64": { "kind": "file", "file_name": "yt-dlp.exe", "size": 23575744, "sha256": "f5389d3698ecde4ef06f4e6b1ce0294fe9ac1396228c8990b8d3416d6d177a7d", "url": "https://github.com/yt-dlp/yt-dlp/releases/download/2026.10.26/yt-dlp.exe" },
+        "macos-x64":   { "kind": "file", "file_name": "yt-dlp",     "size": 37466304, "sha256": "0f922c15ccc0b83eefa1c8bc9104e434318c4bf16e408e1ee93b7745a6efe0aa", "url": "https://github.com/yt-dlp/yt-dlp/releases/download/2026.10.26/yt-dlp_macos" },
+        "macos-arm64": { "kind": "file", "file_name": "yt-dlp",     "size": 37466304, "sha256": "0f922c15ccc0b83eefa1c8bc9104e434318c4bf16e408e1ee93b7745a6efe0aa", "url": "https://github.com/yt-dlp/yt-dlp/releases/download/2026.10.26/yt-dlp_macos" }
+      }
+    },
+    "ffmpeg": {
+      "version": "9.0.2",
+      "platforms": {
+        "linux-x64":   { "kind": "tar.xz", "size": 153903404, "sha256": "abb42de254a7ce5ea173913668afc47b10c21867d2b7ebf3c60059684a4f1f95", "url": "https://github.com/FFmpeg-Builds/FFmpeg-Builds/releases/download/autobuild-2026-11-19-12-39/ffmpeg-n9.0.2-58-g8c7ef49002-linux64-gpl-9.0.tar.xz" },
+        "linux-arm64": { "kind": "tar.xz", "size": 129555084, "sha256": "6a2f4f8dfe2ee8d346726cc76db774dba786933ed2afe0889451c847f8b08186", "url": "https://github.com/FFmpeg-Builds/FFmpeg-Builds/releases/download/autobuild-2026-11-19-12-39/ffmpeg-n9.0.2-58-g8c7ef49002-linuxarm64-gpl-9.0.tar.xz" },
+        "windows-x64": { "kind": "zip",    "size": 198320196, "sha256": "5c4850a82507488907d4a4eb1687653b01f0b9a8f18a02a94ce54bf1d07ef408", "url": "https://github.com/FFmpeg-Builds/FFmpeg-Builds/releases/download/autobuild-2026-11-19-12-39/ffmpeg-n9.0.2-58-g8c7ef49002-win64-gpl-9.0.zip" }
+      }
+    }
+  }
+}

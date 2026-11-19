@@ -5,6 +5,8 @@ use std::sync::Arc;
 pub enum Progress {
     Started,
     Fraction(f32),
+    /// A named phase, for jobs with distinct steps ("Verifying", "Unpacking"...).
+    Stage(&'static str),
     Finished,
 }
 

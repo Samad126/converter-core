@@ -56,7 +56,7 @@ impl Default for Config {
             youtube_max_filesize_bytes: 200 * MB,
             max_page_operation_files: 20,
             temp_root: cache.join("work"),
-            engines_dir: data.join("engines"),
+            engines_dir: std::env::var_os("CONVERTER_ENGINES_DIR").map(PathBuf::from).unwrap_or_else(|| data.join("engines")),
         }
     }
 }
