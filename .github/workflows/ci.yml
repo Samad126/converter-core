@@ -26,12 +26,13 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest, macos-latest]
-    env:
-      CONVERTER_ENGINES_DIR: ${{ runner.temp }}/engines
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+      - name: Engines folder for this run
+        shell: bash
+        run: echo "CONVERTER_ENGINES_DIR=$RUNNER_TEMP/engines" >> "$GITHUB_ENV"
       - name: Install LibreOffice through the app's installer
         shell: bash
         run: |
