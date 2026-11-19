@@ -13,7 +13,6 @@ path = "src/bin/converter.rs"
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
 thiserror = "2"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "process", "time", "sync", "fs", "io-util"] }
 clap = { version = "4", features = ["derive"] }
@@ -21,3 +20,8 @@ dirs = "6"
 which = "8"
 zip = { version = "2", default-features = false, features = ["deflate"] }
 image = { version = "0.25", default-features = false, features = ["bmp", "gif", "ico", "jpeg", "png", "qoi", "tga", "tiff", "webp"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+serde_yaml_ng = "0.10"
+toml = { version = "0.9", features = ["preserve_order"] }
+quick-xml = "0.38"
+rusqlite = { version = "0.37", features = ["bundled"] }

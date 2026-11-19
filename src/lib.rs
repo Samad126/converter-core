@@ -1,6 +1,7 @@
 //! Rust port of the converter backend. No HTTP: a library plus a CLI.
 pub mod config;
 pub mod convert;
+pub mod data;
 pub mod engines;
 pub mod error;
 pub mod formats;

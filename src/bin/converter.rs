@@ -12,8 +12,8 @@ struct Cli {
 enum Cmd {
     /// What an extension (e.g. .docx) can become; without args, the whole matrix size.
     Formats { extension: Option<String> },
-    /// Convert a file: converter convert in.docx pdf [--out DIR]
-    Convert { input: std::path::PathBuf, target: String, #[arg(long)] out: Option<std::path::PathBuf> },
+    /// Convert a file: converter convert <target> <file> [--out DIR] (same order as the Node CLI)
+    Convert { target: String, input: std::path::PathBuf, #[arg(long)] out: Option<std::path::PathBuf> },
     /// Show which external tools are installed and how to get the missing ones.
     Doctor,
 }
