@@ -29,5 +29,7 @@ Python routes need `python3` plus `pdf2docx pdfplumber python-pptx openpyxl pyth
 
 Engines are downloaded into the user's data folder (`CONVERTER_ENGINES_DIR` overrides it) from the pinned
 list in `data/engines.json` (url, sha256, size per platform). Lookup order: `CONVERTER_BIN_<TOOL>` -> our own
-downloaded copy -> `PATH`. Downloaded today: pandoc, qpdf, 7zip, yt-dlp, ffmpeg. Not yet downloadable
-(use a package manager): LibreOffice, Calibre, Tesseract, heif, assimp, Python packages.
+downloaded copy -> `PATH`. Downloaded today: pandoc, qpdf, 7zip, yt-dlp, ffmpeg, and LibreOffice on Windows (MSI, extracted with
+`msiexec /a`, no admin rights) and macOS (DMG, copied out with `ditto`). CI installs it for real on both and converts a
+document with that copy. Not yet downloadable (use a package manager): LibreOffice on Linux, Calibre, Tesseract,
+heif, assimp, Python packages.
