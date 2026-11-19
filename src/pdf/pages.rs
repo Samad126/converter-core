@@ -17,6 +17,16 @@ pub fn save(mut doc: Document) -> Result<Vec<u8>> {
     Ok(out)
 }
 
+/// `(width, height)` in points of every page's media box, in page order (rotation is not applied).
+pub fn page_sizes(bytes: &[u8]) -> Result<Vec<(f64, f64)>> {
+    let mut doc = load(bytes)?;
+    materialize_inherited(&mut doc);
+    Ok(page_ids(&doc).into_iter().map(|id| {
+        let [x0, y0, x1, y1] = media_box(&doc, id).unwrap_or([0.0, 0.0, 612.0, 792.0]);
+        ((x1 - x0).abs(), (y1 - y0).abs())
+    }).collect())
+}
+
 pub fn page_count(bytes: &[u8]) -> Result<usize> { Ok(load(bytes)?.get_pages().len()) }
 
 pub(super) fn page_ids(doc: &Document) -> Vec<ObjectId> { doc.get_pages().into_values().collect() }
@@ -241,6 +251,9 @@ pub(crate) mod tests {
         assert_eq!(b.iter().map(|o| num(o).unwrap()).collect::<Vec<_>>(), [10.0, 40.0, 592.0, 762.0]);
         let e = crop(&sample(1), CropMargins { left: 400.0, right: 400.0, ..Default::default() }, None).unwrap_err();
         assert_eq!(e.code, ErrorCode::EInvalidField);
+    }
+    #[test] fn page_sizes_come_from_the_inherited_media_box() {
+        assert_eq!(page_sizes(&sample(3)).unwrap(), vec![(612.0, 792.0); 3]);
     }
     #[test] fn garbage_is_convert_failed() {
         assert_eq!(load(b"not a pdf").unwrap_err().code, ErrorCode::EConvertFailed);
