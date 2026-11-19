@@ -64,6 +64,9 @@ jobs:
       - name: Engines folder for this run
         shell: bash
         run: echo "CONVERTER_ENGINES_DIR=$RUNNER_TEMP/engines" >> "$GITHUB_ENV"
+      - name: System libraries Calibre itself needs on Linux
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libegl1 libopengl0 libxcb-cursor0 libxkbcommon0
       - name: Install Calibre through the app's installer
         shell: bash
         run: |

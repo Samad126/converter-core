@@ -91,9 +91,29 @@ pub async fn assimp(ctx: &Ctx<'_>, conv: &Resolved) -> Result<Vec<PathBuf>> {
     require_output(ctx, conv, "assimp")
 }
 
+/// A missing system library shows up as a Python/Qt traceback; say what to install instead.
+pub fn explain_calibre_failure(stderr: &str) -> Option<&'static str> {
+    let low = stderr.to_lowercase();
+    (low.contains("libegl") || low.contains("libopengl") || low.contains("libxcb-cursor") || low.contains("cannot open shared object file"))
+        .then_some("Calibre needs a few system libraries that are missing on this computer. On Debian/Ubuntu: sudo apt install libegl1 libopengl0 libxcb-cursor0 libxkbcommon0")
+}
+
 pub async fn ebook(ctx: &Ctx<'_>, conv: &Resolved) -> Result<Vec<PathBuf>> {
     let out = output(ctx, conv);
-    process::run(&ctx.bin("calibre")?, &[s(&ctx.input), s(&out)], &ctx.workspace, ctx.timeout)
-        .await?.require_ok("ebook-convert")?;
+    let o = process::run(&ctx.bin("calibre")?, &[s(&ctx.input), s(&out)], &ctx.workspace, ctx.timeout).await?;
+    if !o.ok() {
+        if let Some(hint) = explain_calibre_failure(&o.stderr) { return Err(Error::new(ErrorCode::EConvertFailed, hint)); }
+    }
+    o.require_ok("ebook-convert")?;
     require_output(ctx, conv, "ebook-convert")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test] fn missing_qt_libraries_get_an_install_hint() {
+        let tb = "Failed to import PyQt module: PyQt6.QtGui with error: libEGL.so.1: cannot open shared object file: No such file or directory";
+        assert!(explain_calibre_failure(tb).unwrap().contains("apt install libegl1"));
+        assert!(explain_calibre_failure("Conversion error: bad epub").is_none(), "other failures keep their own message");
+    }
 }
