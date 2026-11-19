@@ -82,3 +82,43 @@ jobs:
           ls -l "$RUNNER_TEMP"
           test -s "$RUNNER_TEMP/book.mobi"
           test -s "$RUNNER_TEMP/book.azw3"
+
+  # The app's own Python: download a portable CPython, pip-install the packages into it, and convert with nothing else
+  # on the machine (CONVERTER_BIN_PYTHON is not set, and the system Python has none of these packages).
+  python:
+    name: bundled Python (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Engines folder for this run
+        shell: bash
+        run: echo "CONVERTER_ENGINES_DIR=$RUNNER_TEMP/engines" >> "$GITHUB_ENV"
+      - name: Without it, the conversion asks for the Python tools
+        shell: bash
+        run: |
+          python3 tools/make_tiny_pdf.py "$RUNNER_TEMP/tiny.pdf" "Hello from CI"
+          cargo run -q --bin converter -- convert docx "$RUNNER_TEMP/tiny.pdf" 2>&1 | tee out.txt || true
+          grep -q "E_ENGINE_MISSING" out.txt
+      - name: Install the Python tools through the app's installer
+        shell: bash
+        run: |
+          cargo run -q --bin converter -- engines install python
+          cargo run -q --bin converter -- engines list | tee list.txt
+          grep -E "^python +installed" list.txt | grep -q "engines"
+      - name: Convert with it
+        shell: bash
+        run: |
+          cargo run -q --bin converter -- convert docx "$RUNNER_TEMP/tiny.pdf"
+          cargo run -q --bin converter -- convert markdown "$RUNNER_TEMP/tiny.pdf"
+          grep -q "Hello from CI" "$RUNNER_TEMP/tiny.md"
+          printf 'name,city\nAnn,Baku\n' > "$RUNNER_TEMP/t.csv"
+          cargo run -q --bin converter -- convert parquet "$RUNNER_TEMP/t.csv"
+          cargo run -q --bin converter -- convert csv "$RUNNER_TEMP/t.parquet" --out "$RUNNER_TEMP/back"
+          grep -q "Ann,Baku" "$RUNNER_TEMP/back/t.csv"
+          ls -l "$RUNNER_TEMP"

@@ -19,10 +19,24 @@ pub struct PlatformEntry {
     /// For `kind = file`: the name to save the executable as.
     #[serde(default)]
     pub file_name: Option<String>,
+    /// Arguments for the freshly unpacked engine's own program, run once before it goes live (e.g. `-m pip install …`
+    /// for the bundled Python). A failure aborts the install and leaves any existing copy untouched.
+    #[serde(default)]
+    pub post_install: Vec<String>,
+    /// Directory names deleted (anywhere in the tree) once the engine is ready: caches and test suites that only add
+    /// size. Only ever applied inside the new staging folder.
+    #[serde(default)]
+    pub prune: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct EngineEntry { pub version: String, pub platforms: BTreeMap<String, PlatformEntry> }
+pub struct EngineEntry {
+    pub version: String,
+    /// What it occupies once set up, when that is much more than the download (Python + its packages).
+    #[serde(default)]
+    pub disk_mb: Option<u64>,
+    pub platforms: BTreeMap<String, PlatformEntry>,
+}
 
 #[derive(Debug, Deserialize)]
 pub struct Manifest { pub engines: BTreeMap<String, EngineEntry> }
@@ -58,8 +72,11 @@ pub fn catalog(cfg: &Config) -> Vec<CatalogItem> {
     let plat = current_platform();
     engines::TOOLS.iter().map(|t| {
         let entry = manifest().engines.get(t.name);
-        let p = entry.and_then(|e| e.platforms.get(&plat).map(|p| (e.version.clone(), p.size)));
-        CatalogItem { name: t.name, used_for: t.used_for, installed_path: engines::resolve(t, cfg, None),
+        let p = entry.and_then(|e| e.platforms.get(&plat).map(|p| (e.version.clone(), e.disk_mb.map(|m| m * 1024 * 1024).unwrap_or(p.size))));
+        let mut installed = engines::resolve(t, cfg, None);
+        // A system Python is not enough: it rarely has the packages we need, so only our own copy counts as "installed".
+        if t.name == "python" && p.is_some() { installed = installed.filter(|path| path.starts_with(&cfg.engines_dir)); }
+        CatalogItem { name: t.name, used_for: t.used_for, installed_path: installed,
             downloadable: p.as_ref().map(|x| x.0.clone()), size: p.map(|x| x.1), hint: t.hint() }
     }).collect()
 }
@@ -122,10 +139,15 @@ pub async fn install_entry(cfg: &Config, name: &str, p: &PlatformEntry, progress
     if let Err(e) = unpack { let _ = std::fs::remove_dir_all(&staging); return Err(e); }
 
     // Prove the tool is really in there before replacing anything.
-    if !tool.bins.iter().any(|b| find(&staging, b, 5)) {
+    let Some(program) = tool.bins.iter().find_map(|b| find_path(&staging, b, 5)) else {
         let _ = std::fs::remove_dir_all(&staging);
         return Err(err(format!("The downloaded package for {name} does not contain the expected program.")));
+    };
+    if !p.post_install.is_empty() {
+        progress(Progress::Stage("Installing packages"));
+        if let Err(e) = run_post_install(&program, &p.post_install).await { let _ = std::fs::remove_dir_all(&staging); return Err(e); }
     }
+    if !p.prune.is_empty() { prune_dirs(&staging, &p.prune); }
     let final_dir = cfg.engines_dir.join(name);
     let old = cfg.engines_dir.join(format!(".old-{name}"));
     let _ = std::fs::remove_dir_all(&old);
@@ -139,6 +161,39 @@ pub async fn install_entry(cfg: &Config, name: &str, p: &PlatformEntry, progress
     Ok(())
 }
 
+/// Runs the engine's own program with `args` (15 minutes at most) and keeps its stderr for the error message.
+async fn run_post_install(program: &Path, args: &[String]) -> Result<()> {
+    let out = tokio::time::timeout(std::time::Duration::from_secs(15 * 60),
+        tokio::process::Command::new(program).args(args).env("PIP_DISABLE_PIP_VERSION_CHECK", "1").stdin(std::process::Stdio::null()).kill_on_drop(true).output()).await
+        .map_err(|_| err("Installing the packages took too long and was stopped."))?
+        .map_err(|e| err(format!("Could not run the installed program: {e}")))?;
+    if out.status.success() { return Ok(()); }
+    let text = String::from_utf8_lossy(&out.stderr);
+    let tail: String = text.trim().chars().rev().take(1500).collect::<Vec<_>>().into_iter().rev().collect();
+    Err(err(format!("Installing the packages failed: {tail}")))
+}
+
+/// Deletes every directory named in `names` under `root`. Symlinks are never followed, and the walk cannot leave `root`.
+fn prune_dirs(root: &Path, names: &[String]) {
+    let Ok(rd) = std::fs::read_dir(root) else { return };
+    for e in rd.flatten() {
+        let Ok(ft) = e.file_type() else { continue };
+        if !ft.is_dir() { continue; } // `is_dir` on a DirEntry's file_type is false for symlinks: they are skipped
+        if names.iter().any(|n| e.file_name().to_string_lossy() == n.as_str()) { let _ = std::fs::remove_dir_all(e.path()); } else { prune_dirs(&e.path(), names); }
+    }
+}
+
+fn find_path(dir: &Path, bin: &str, depth: u32) -> Option<PathBuf> {
+    let mut subdirs = vec![];
+    for e in std::fs::read_dir(dir).ok()?.flatten() {
+        let p = e.path();
+        if p.is_dir() { subdirs.push(p); } else if p.file_name().is_some_and(|n| n == bin) { return Some(p); }
+    }
+    if depth == 0 { return None; }
+    subdirs.into_iter().find_map(|d| find_path(&d, bin, depth - 1))
+}
+
+#[allow(dead_code)]
 fn find(dir: &Path, bin: &str, depth: u32) -> bool {
     std::fs::read_dir(dir).into_iter().flatten().flatten().any(|e| {
         let p = e.path();
@@ -293,6 +348,24 @@ mod tests {
         for plat in ["windows-x64", "macos-x64", "macos-arm64"] { assert!(lo.platforms.contains_key(plat), "{plat}"); }
         assert!(lo.platforms["windows-x64"].url.contains("download.documentfoundation.org"), "official source only");
     }
+    #[test] fn python_is_downloadable_everywhere_and_installs_its_packages() {
+        let py = &manifest().engines["python"];
+        for plat in ["linux-x64", "linux-arm64", "windows-x64", "macos-x64", "macos-arm64"] {
+            let p = &py.platforms[plat];
+            assert!(p.post_install.iter().any(|a| a == "pdf2docx") && p.post_install.iter().any(|a| a == "pyarrow"), "{plat}");
+            assert!(p.post_install.iter().any(|a| a == "--only-binary=:all:"), "never build packages from source on a user's machine");
+        }
+    }
+    #[test] fn prune_removes_named_directories_but_not_through_symlinks() {
+        let d = tmpdir("prune");
+        for p in ["a/__pycache__/x.pyc", "a/b/__pycache__/y.pyc", "a/keep/f.txt", "tests/t.py"] { let f = d.join(p); std::fs::create_dir_all(f.parent().unwrap()).unwrap(); std::fs::write(f, "x").unwrap(); }
+        let outside = tmpdir("prune-outside"); std::fs::create_dir_all(outside.join("__pycache__")).unwrap(); std::fs::write(outside.join("__pycache__/precious"), "x").unwrap();
+        #[cfg(unix)] std::os::unix::fs::symlink(&outside, d.join("a/link")).unwrap();
+        prune_dirs(&d, &["__pycache__".into(), "tests".into()]);
+        assert!(!d.join("a/__pycache__").exists() && !d.join("a/b/__pycache__").exists() && !d.join("tests").exists());
+        assert!(d.join("a/keep/f.txt").exists(), "other directories stay");
+        assert!(outside.join("__pycache__/precious").exists(), "a symlink must never lead the pruner out of the tree");
+    }
     #[test] fn calibre_is_downloadable_on_every_platform() {
         let c = &manifest().engines["calibre"];
         for plat in ["linux-x64", "linux-arm64", "windows-x64", "macos-x64", "macos-arm64"] { assert!(c.platforms.contains_key(plat), "{plat}"); }
@@ -377,7 +450,7 @@ mod tests {
     }
     fn sha(b: &[u8]) -> String { Sha256::digest(b).iter().map(|x| format!("{x:02x}")).collect() }
     fn cfg_in(d: &Path) -> Config { Config { engines_dir: d.join("engines"), ..Config::default() } }
-    fn entry(url: String, body: &[u8]) -> PlatformEntry { PlatformEntry { url, sha256: sha(body), size: body.len() as u64, kind: "zip".into(), file_name: None } }
+    fn entry(url: String, body: &[u8]) -> PlatformEntry { PlatformEntry { url, sha256: sha(body), size: body.len() as u64, kind: "zip".into(), file_name: None, post_install: vec![], prune: vec![] } }
 
     fn pandoc_zip(d: &Path, content: &[u8]) -> Vec<u8> { let a = d.join("p.zip"); make_zip(&a, &[("pandoc-9/bin/pandoc", content)]); std::fs::read(a).unwrap() }
 
@@ -416,6 +489,26 @@ mod tests {
         let e = install_entry(&cfg, "pandoc", &entry(serve(body.clone()), &body), crate::progress::noop()).await.unwrap_err();
         assert!(e.message.contains("expected program"));
         assert!(!cfg.engines_dir.join("pandoc").exists());
+    }
+    #[cfg(unix)]
+    #[tokio::test] async fn post_install_runs_with_the_configured_arguments_and_failure_aborts_cleanly() {
+        use std::os::unix::fs::PermissionsExt;
+        let d = tmpdir("post"); let cfg = cfg_in(&d);
+        let pack = |script: &str| { let a = d.join("py.zip"); let mut z = zip::ZipWriter::new(std::fs::File::create(&a).unwrap());
+            z.start_file("python/bin/python3", zip::write::SimpleFileOptions::default().unix_permissions(0o755)).unwrap(); z.write_all(script.as_bytes()).unwrap(); z.finish().unwrap(); std::fs::read(a).unwrap() };
+        // success: the fake python records the arguments it was given next to itself
+        let ok = pack("#!/bin/sh\necho \"$@\" > \"$(dirname \"$0\")/args.txt\"\n");
+        let mut e = entry(serve(ok.clone()), &ok); e.post_install = vec!["-m".into(), "pip".into(), "install".into(), "pkg-a".into()];
+        install_entry(&cfg, "python", &e, crate::progress::noop()).await.unwrap();
+        let args = std::fs::read_to_string(cfg.engines_dir.join("python/python/bin/args.txt")).unwrap();
+        assert_eq!(args.trim(), "-m pip install pkg-a");
+        // failure: a non-zero exit aborts, reports pip's message, and leaves the working copy alone
+        let bad = pack("#!/bin/sh\necho 'no matching distribution' >&2\nexit 1\n");
+        let mut e = entry(serve(bad.clone()), &bad); e.post_install = vec!["install".into()];
+        let r = install_entry(&cfg, "python", &e, crate::progress::noop()).await.unwrap_err();
+        assert!(r.message.contains("no matching distribution"), "{}", r.message);
+        assert!(cfg.engines_dir.join("python/python/bin/args.txt").exists(), "the previous install must survive a failed update");
+        assert!(std::fs::read_dir(&cfg.engines_dir).unwrap().flatten().all(|e| !e.file_name().to_string_lossy().starts_with('.')), "no staging leftovers");
     }
     #[tokio::test] async fn remove_deletes_the_install() {
         let d = tmpdir("rm"); let body = pandoc_zip(&d, b"v"); let cfg = cfg_in(&d);

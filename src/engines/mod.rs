@@ -45,7 +45,7 @@ pub const TOOLS: &[Tool] = &[
         hint_linux: "apt-get install -y calibre", hint_macos: "brew install --cask calibre", hint_windows: "winget install --id calibre.calibre" },
     Tool { name: "tesseract", used_for: "OCR for scanned PDFs", bins: &["tesseract", "tesseract.exe"], version_args: &["--version"],
         hint_linux: "apt-get install -y tesseract-ocr", hint_macos: "brew install tesseract", hint_windows: "winget install --id UB-Mannheim.TesseractOCR" },
-    Tool { name: "python", used_for: "PDF to docx/pptx/xlsx, ORC, fonts", bins: &["python3", "python", "python.exe"], version_args: &["--version"],
+    Tool { name: "python", used_for: "Python tools: PDF to Word/PowerPoint/Excel, Parquet/ORC, fonts, compare, redact", bins: &["python3", "python", "python.exe"], version_args: &["--version"],
         hint_linux: "apt-get install -y python3 python3-pip", hint_macos: "brew install python3", hint_windows: "winget install --id Python.Python.3.12" },
 ];
 

@@ -207,6 +207,167 @@
           "url": "https://github.com/kovidgoyal/calibre/releases/download/v9.18.0/calibre-9.18.0.dmg"
         }
       }
+    },
+    "python": {
+      "version": "3.12.16",
+      "platforms": {
+        "linux-x64": {
+          "kind": "tar.gz",
+          "size": 68163679,
+          "sha256": "c2f87d4b4e8db3abddb0f116c6ccfc503d0cbdbb9ee8faacddad1b679ec12e99",
+          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.12.16%2B20261110-x86_64-unknown-linux-gnu-install_only.tar.gz",
+          "post_install": [
+            "-m",
+            "pip",
+            "install",
+            "--no-cache-dir",
+            "--disable-pip-version-check",
+            "--only-binary=:all:",
+            "pdf2docx",
+            "pdfplumber",
+            "python-pptx",
+            "openpyxl",
+            "python-docx",
+            "pymupdf<2",
+            "pyarrow",
+            "fonttools",
+            "brotli"
+          ],
+          "prune": [
+            "__pycache__",
+            "test",
+            "tests",
+            "idlelib",
+            "tkinter",
+            "turtledemo"
+          ]
+        },
+        "linux-arm64": {
+          "kind": "tar.gz",
+          "size": 53264815,
+          "sha256": "4792f81750282597fb2a3389fe18b945ed2ba6aad5e45ad406d122c58cb33081",
+          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.12.16%2B20261110-aarch64-unknown-linux-gnu-install_only.tar.gz",
+          "post_install": [
+            "-m",
+            "pip",
+            "install",
+            "--no-cache-dir",
+            "--disable-pip-version-check",
+            "--only-binary=:all:",
+            "pdf2docx",
+            "pdfplumber",
+            "python-pptx",
+            "openpyxl",
+            "python-docx",
+            "pymupdf<2",
+            "pyarrow",
+            "fonttools",
+            "brotli"
+          ],
+          "prune": [
+            "__pycache__",
+            "test",
+            "tests",
+            "idlelib",
+            "tkinter",
+            "turtledemo"
+          ]
+        },
+        "windows-x64": {
+          "kind": "tar.gz",
+          "size": 47438699,
+          "sha256": "e23fe5b16926de1d81661b1a97352e89fb167549c55a6825796ccd0f32ec7f1b",
+          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.12.16%2B20261110-x86_64-pc-windows-msvc-install_only.tar.gz",
+          "post_install": [
+            "-m",
+            "pip",
+            "install",
+            "--no-cache-dir",
+            "--disable-pip-version-check",
+            "--only-binary=:all:",
+            "pdf2docx",
+            "pdfplumber",
+            "python-pptx",
+            "openpyxl",
+            "python-docx",
+            "pymupdf<2",
+            "pyarrow",
+            "fonttools",
+            "brotli"
+          ],
+          "prune": [
+            "__pycache__",
+            "test",
+            "tests",
+            "idlelib",
+            "tkinter",
+            "turtledemo"
+          ]
+        },
+        "macos-x64": {
+          "kind": "tar.gz",
+          "size": 25078514,
+          "sha256": "83f2922437e6d546d0fcdb8c11f150a8e52787e8d9ea8651b1974e20908eb1bc",
+          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.12.16%2B20261110-x86_64-apple-darwin-install_only.tar.gz",
+          "post_install": [
+            "-m",
+            "pip",
+            "install",
+            "--no-cache-dir",
+            "--disable-pip-version-check",
+            "--only-binary=:all:",
+            "pdf2docx",
+            "pdfplumber",
+            "python-pptx",
+            "openpyxl",
+            "python-docx",
+            "pymupdf<2",
+            "pyarrow",
+            "fonttools",
+            "brotli"
+          ],
+          "prune": [
+            "__pycache__",
+            "test",
+            "tests",
+            "idlelib",
+            "tkinter",
+            "turtledemo"
+          ]
+        },
+        "macos-arm64": {
+          "kind": "tar.gz",
+          "size": 25371130,
+          "sha256": "e956e60bc9465d577ef8062059aa05cd3a2665b4b8678a2ed24e432368330b8f",
+          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.12.16%2B20261110-aarch64-apple-darwin-install_only.tar.gz",
+          "post_install": [
+            "-m",
+            "pip",
+            "install",
+            "--no-cache-dir",
+            "--disable-pip-version-check",
+            "--only-binary=:all:",
+            "pdf2docx",
+            "pdfplumber",
+            "python-pptx",
+            "openpyxl",
+            "python-docx",
+            "pymupdf<2",
+            "pyarrow",
+            "fonttools",
+            "brotli"
+          ],
+          "prune": [
+            "__pycache__",
+            "test",
+            "tests",
+            "idlelib",
+            "tkinter",
+            "turtledemo"
+          ]
+        }
+      },
+      "disk_mb": 750
     }
   }
 }

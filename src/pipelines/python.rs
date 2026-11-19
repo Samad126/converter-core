@@ -23,8 +23,9 @@ fn missing_module(stderr: &str) -> Option<Error> {
     let m = stderr.lines().find(|l| l.contains("ModuleNotFoundError") || l.contains("No module named '"))?;
     let name = m.split('\'').nth(1).unwrap_or("a Python package");
     let mut e = Error::new(ErrorCode::EEngineMissing,
-        format!("This conversion needs the Python package \"{name}\", which is not installed."));
-    e.engine = Some("python-packages".into());
+        format!("This conversion needs the Python package \"{name}\", which is not installed. Install the Python tools to add it."));
+    // The bundled Python (with all packages) is one download; the UI turns this into an Install button.
+    e.engine = Some("python".into());
     Some(e)
 }
 
