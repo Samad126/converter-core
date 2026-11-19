@@ -5,14 +5,22 @@ use std::path::{Path, PathBuf};
 
 const NO_TABLES_EXIT: i32 = 2;
 
-/// Where `scripts/` lives: env override, next to the executable, or the source tree (dev builds).
-pub fn scripts_dir() -> PathBuf {
-    if let Some(p) = std::env::var_os("CONVERTER_SCRIPTS_DIR") { return p.into(); }
-    if let Ok(exe) = std::env::current_exe() {
-        for d in exe.ancestors().skip(1).take(3) {
-            if d.join("scripts").join("pdf_engine.py").is_file() { return d.join("scripts"); }
+/// Where the scripts folder is, given the running executable: next to it, one or two folders up (an install tree), or in a
+/// macOS bundle's `Contents/Resources`. `exists` is injected so the search order can be tested without a filesystem.
+pub fn find_scripts_for(exe: &Path, exists: impl Fn(&Path) -> bool) -> Option<PathBuf> {
+    for dir in exe.ancestors().skip(1).take(3) {
+        for rel in ["scripts", "Resources/scripts"] {
+            let cand = dir.join(rel);
+            if exists(&cand.join("pdf_engine.py")) { return Some(cand); }
         }
     }
+    None
+}
+
+/// Where `scripts/` lives: env override, next to the executable (or inside a macOS bundle), or the source tree (dev builds).
+pub fn scripts_dir() -> PathBuf {
+    if let Some(p) = std::env::var_os("CONVERTER_SCRIPTS_DIR") { return p.into(); }
+    if let Some(found) = std::env::current_exe().ok().and_then(|exe| find_scripts_for(&exe, |p| p.is_file())) { return found; }
     Path::new(env!("CARGO_MANIFEST_DIR")).join("scripts")
 }
 
@@ -64,6 +72,14 @@ mod tests {
         let e = missing_module("docx failed: No module named 'pdf2docx'").unwrap();
         assert!(e.message.contains("pdf2docx"));
         assert!(missing_module("some other failure").is_none());
+    }
+    #[test] fn scripts_are_found_beside_the_binary_and_in_a_mac_bundle() {
+        let has = |set: &'static [&'static str]| move |p: &Path| set.iter().any(|x| Path::new(x) == p);
+        assert_eq!(find_scripts_for(Path::new("/opt/conv/converter-desktop"), has(&["/opt/conv/scripts/pdf_engine.py"])), Some("/opt/conv/scripts".into()));
+        assert_eq!(find_scripts_for(Path::new("/Applications/Converter.app/Contents/MacOS/converter-desktop"),
+            has(&["/Applications/Converter.app/Contents/Resources/scripts/pdf_engine.py"])), Some("/Applications/Converter.app/Contents/Resources/scripts".into()));
+        assert_eq!(find_scripts_for(Path::new("/opt/conv/bin/converter-desktop"), has(&["/opt/conv/scripts/pdf_engine.py"])), Some("/opt/conv/scripts".into()), "one level up");
+        assert_eq!(find_scripts_for(Path::new("/usr/bin/converter-desktop"), has(&[])), None);
     }
     #[test] fn scripts_found_in_dev_tree() { assert!(scripts_dir().join("pdf_engine.py").is_file()); }
 }
