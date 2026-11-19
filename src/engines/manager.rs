@@ -14,7 +14,7 @@ pub struct PlatformEntry {
     pub url: String,
     pub sha256: String,
     pub size: u64,
-    /// `zip` | `tar.gz` | `tar.xz` | `file`
+    /// `zip` | `tar.gz` | `tar.xz` | `file` | `msi` (Windows installer, extracted without installing) | `dmg` (macOS disk image)
     pub kind: String,
     /// For `kind = file`: the name to save the executable as.
     #[serde(default)]
@@ -220,9 +220,52 @@ pub fn unpack_archive(archive: &Path, dest: &Path, kind: &str, file_name: Option
             }
             Ok(())
         }
+        "msi" => unpack_msi(archive, dest),
+        "dmg" => unpack_dmg(archive, dest),
         other => Err(err(format!("Unknown package kind \"{other}\"."))),
     }
 }
+
+/// Windows: an *administrative* extract (`msiexec /a`) copies the program files without installing anything: no
+/// registry entries, no admin rights, nothing to uninstall, so removing the folder removes the engine.
+#[cfg(windows)]
+fn unpack_msi(archive: &Path, dest: &Path) -> Result<()> {
+    use std::os::windows::process::CommandExt;
+    let abs = |p: &Path| std::fs::canonicalize(p).map(|c| c.display().to_string().trim_start_matches(r"\\?\").to_string());
+    let (msi, target) = (abs(archive)?, abs(dest)?);
+    let status = std::process::Command::new("msiexec").arg("/a").arg(&msi).arg("/qn")
+        .raw_arg(format!("TARGETDIR=\"{target}\"")).status().map_err(|e| err(format!("Could not run msiexec: {e}")))?;
+    // 0 = ok, 3010 = ok but a restart would be needed (irrelevant for an extract).
+    match status.code() { Some(0) | Some(3010) => Ok(()), c => Err(err(format!("msiexec failed to extract the package (exit {c:?})."))) }
+}
+
+#[cfg(not(windows))]
+fn unpack_msi(_: &Path, _: &Path) -> Result<()> { Err(err("MSI packages can only be unpacked on Windows.")) }
+
+/// macOS: mount the image read-only, copy the `.app` out with `ditto` (keeps symlinks, permissions, extended
+/// attributes), and always unmount again.
+#[cfg(target_os = "macos")]
+fn unpack_dmg(archive: &Path, dest: &Path) -> Result<()> {
+    let mount = dest.join(".mount");
+    std::fs::create_dir_all(&mount)?;
+    let attach = std::process::Command::new("hdiutil").args(["attach", "-nobrowse", "-readonly", "-noverify", "-mountpoint"]).arg(&mount).arg(archive)
+        .output().map_err(|e| err(format!("Could not run hdiutil: {e}")))?;
+    if !attach.status.success() { return Err(err(format!("Could not open the disk image: {}", String::from_utf8_lossy(&attach.stderr).trim()))); }
+    let result = (|| -> Result<()> {
+        let app = std::fs::read_dir(&mount)?.flatten().map(|e| e.path()).find(|p| p.extension().is_some_and(|x| x == "app"))
+            .ok_or_else(|| err("The disk image does not contain an application."))?;
+        let target = dest.join(app.file_name().unwrap());
+        let st = std::process::Command::new("ditto").arg(&app).arg(&target).status().map_err(|e| err(format!("Could not run ditto: {e}")))?;
+        if st.success() { Ok(()) } else { Err(err("Copying the application out of the disk image failed.")) }
+    })();
+    let detached = std::process::Command::new("hdiutil").args(["detach", "-quiet"]).arg(&mount).status();
+    if !detached.is_ok_and(|s| s.success()) { let _ = std::process::Command::new("hdiutil").args(["detach", "-force", "-quiet"]).arg(&mount).status(); }
+    let _ = std::fs::remove_dir(&mount);
+    result
+}
+
+#[cfg(not(target_os = "macos"))]
+fn unpack_dmg(_: &Path, _: &Path) -> Result<()> { Err(err("Disk images can only be unpacked on macOS.")) }
 
 #[cfg(test)]
 mod tests {
@@ -237,11 +280,24 @@ mod tests {
                 assert!(p.url.starts_with("https://"), "{name}/{plat}: https only");
                 assert_eq!(p.sha256.len(), 64, "{name}/{plat}");
                 assert!(p.sha256.bytes().all(|b| b.is_ascii_hexdigit()));
-                assert!(p.size > 0 && ["zip", "tar.gz", "tar.xz", "file"].contains(&p.kind.as_str()));
+                assert!(p.size > 0 && ["zip", "tar.gz", "tar.xz", "file", "msi", "dmg"].contains(&p.kind.as_str()));
+                assert!(p.kind != "msi" || plat.starts_with("windows"), "{name}/{plat}: msi only makes sense on Windows");
+                assert!(p.kind != "dmg" || plat.starts_with("macos"), "{name}/{plat}: dmg only makes sense on macOS");
                 assert!(p.kind != "file" || p.file_name.is_some(), "{name}/{plat}");
             }
         }
         assert!(manifest().engines.contains_key("pandoc"));
+    }
+    #[test] fn libreoffice_is_downloadable_where_there_is_no_package_manager_default() {
+        let lo = &manifest().engines["libreoffice"];
+        for plat in ["windows-x64", "macos-x64", "macos-arm64"] { assert!(lo.platforms.contains_key(plat), "{plat}"); }
+        assert!(lo.platforms["windows-x64"].url.contains("download.documentfoundation.org"), "official source only");
+    }
+    #[cfg(not(windows))]
+    #[test] fn msi_is_refused_off_windows_and_dmg_off_macos_with_a_clear_message() {
+        let d = tmpdir("kinds"); let f = d.join("x.bin"); std::fs::write(&f, "x").unwrap();
+        if !cfg!(windows) { assert!(unpack_archive(&f, &d.join("a"), "msi", None).unwrap_err().message.contains("Windows")); }
+        if !cfg!(target_os = "macos") { assert!(unpack_archive(&f, &d.join("b"), "dmg", None).unwrap_err().message.contains("macOS")); }
     }
     #[test] fn platform_name_shape() { let p = current_platform(); assert!(p.contains('-')); }
 

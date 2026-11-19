@@ -16,3 +16,34 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo build --all-targets
       - run: cargo test
+
+  # The part unit tests cannot cover: really download LibreOffice with our installer (checksum, msiexec / hdiutil
+  # unpack, no admin rights) and convert a document with the copy it put in the engines folder.
+  libreoffice:
+    name: LibreOffice install + convert (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    env:
+      CONVERTER_ENGINES_DIR: ${{ runner.temp }}/engines
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Install LibreOffice through the app's installer
+        shell: bash
+        run: |
+          cargo run -q --bin converter -- engines install libreoffice
+          cargo run -q --bin converter -- engines list | tee list.txt
+          grep -E "^libreoffice +installed" list.txt | grep -q "engines"   # it must be OUR copy, not a system one
+      - name: Convert with it
+        shell: bash
+        run: |
+          printf 'Hello from CI\n' > "$RUNNER_TEMP/hello.txt"
+          cargo run -q --bin converter -- convert pdf  "$RUNNER_TEMP/hello.txt"
+          cargo run -q --bin converter -- convert docx "$RUNNER_TEMP/hello.txt"
+          ls -l "$RUNNER_TEMP"
+          head -c 5 "$RUNNER_TEMP/hello.pdf" | grep -q '%PDF'
+          test -s "$RUNNER_TEMP/hello.docx"
