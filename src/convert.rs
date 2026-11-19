@@ -50,7 +50,9 @@ pub async fn convert_file(cfg: &Config, input: &Path, target: &str, opts: Conver
 
     let dest_dir = opts.out_dir.unwrap_or_else(|| input.parent().map(Path::to_path_buf).unwrap_or_default());
     tokio::fs::create_dir_all(&dest_dir).await?;
-    let stem = input.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_else(|| "converted".into());
+    let mut stem = input.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_else(|| "converted".into());
+    // `foo.tar.gz` has stem `foo.tar`; the result should be `foo.<new ext>`.
+    if let Some(s) = stem.strip_suffix(".tar") { stem = s.to_string(); }
 
     let written = if produced.len() == 1 {
         let dest = unique_path(&dest_dir, &stem, &conv.target.extension);
