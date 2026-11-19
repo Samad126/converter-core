@@ -15,7 +15,7 @@ async fn write(dir: &Path, stem: &str, suffix: &str, data: &[u8]) -> Result<Path
 }
 
 /// `flag` values are the CLI's `--name value` pairs.
-pub async fn run(cfg: &Config, op: &str, files: &[PathBuf], flag: &dyn Fn(&str) -> Option<String>, out: Option<PathBuf>) -> Result<Vec<PathBuf>> {
+pub async fn run(cfg: &Config, op: &str, files: &[PathBuf], flag: &(dyn Fn(&str) -> Option<String> + Sync), out: Option<PathBuf>) -> Result<Vec<PathBuf>> {
     let first = files.first().ok_or_else(|| bad("Give at least one PDF."))?;
     let dir = out.unwrap_or_else(|| first.parent().map(Path::to_path_buf).unwrap_or_default());
     let stem = first.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_else(|| "output".into());
