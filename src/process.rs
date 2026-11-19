@@ -85,3 +85,56 @@ unsafe fn libc_kill(pid: i32) {
     extern "C" { fn kill(pid: i32, sig: i32) -> i32; }
     kill(pid, 9);
 }
+
+/// Like `run_env`, but calls `on_line` for every stdout/stderr line as it arrives
+/// (progress parsing). Output is still collected into the returned `Outcome`.
+pub async fn run_streaming(
+    bin: &Path, args: &[String], workspace: &Path, timeout: Duration, env: &[(&str, String)],
+    mut on_line: impl FnMut(&str) + Send,
+) -> Result<Outcome> {
+    use tokio::io::{AsyncBufReadExt, BufReader};
+    let mut cmd = Command::new(bin);
+    cmd.args(args).current_dir(workspace)
+        .stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped())
+        .kill_on_drop(true)
+        .env("HOME", workspace).env("TMPDIR", workspace).env("LANG", "C.UTF-8").env("LC_ALL", "C.UTF-8");
+    for (k, v) in env { cmd.env(k, v); }
+    #[cfg(unix)]
+    cmd.process_group(0);
+    #[cfg(windows)]
+    cmd.creation_flags(0x0800_0000);
+    let mut child = cmd.spawn().map_err(|e| {
+        Error::new(ErrorCode::EConvertFailed, format!("Could not start {}: {e}", bin.display()))
+    })?;
+    #[cfg(unix)]
+    let pgid = child.id();
+    let mut out = BufReader::new(child.stdout.take().unwrap()).lines();
+    let mut err = BufReader::new(child.stderr.take().unwrap()).lines();
+    let (mut so, mut se) = (String::new(), String::new());
+
+    let work = async {
+        let (mut out_done, mut err_done) = (false, false);
+        while !(out_done && err_done) {
+            tokio::select! {
+                l = out.next_line(), if !out_done => match l {
+                    Ok(Some(l)) => { on_line(&l); if so.len() < (4 << 20) { so.push_str(&l); so.push('\n'); } }
+                    _ => out_done = true,
+                },
+                l = err.next_line(), if !err_done => match l {
+                    Ok(Some(l)) => { on_line(&l); if se.len() < 8192 { se.push_str(&l); se.push('\n'); } }
+                    _ => err_done = true,
+                },
+            }
+        }
+        child.wait().await
+    };
+    match tokio::time::timeout(timeout, work).await {
+        Ok(Ok(status)) => Ok(Outcome { code: status.code(), stdout: so, stderr: se }),
+        Ok(Err(e)) => Err(Error::new(ErrorCode::EConvertFailed, format!("Process error: {e}"))),
+        Err(_) => {
+            #[cfg(unix)]
+            if let Some(pid) = pgid { unsafe { libc_kill(-(pid as i32)); } }
+            Err(Error::new(ErrorCode::ETimeout, "The conversion took too long and was stopped."))
+        }
+    }
+}

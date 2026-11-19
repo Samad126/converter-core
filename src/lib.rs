@@ -7,10 +7,13 @@ pub mod engines;
 pub mod error;
 pub mod extract;
 pub mod formats;
+pub mod media;
 pub mod pipelines;
+pub mod progress;
 pub mod process;
 pub mod queue;
 pub mod workspace;
+pub mod youtube;
 
 pub use error::{Error, ErrorCode, Result};
 pub use config::Config;

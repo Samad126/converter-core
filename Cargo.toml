@@ -27,3 +27,4 @@ quick-xml = "0.38"
 rusqlite = { version = "0.37", features = ["bundled"] }
 mail-parser = "0.11"
 rust_xlsxwriter = "0.90"
+url = "2"
