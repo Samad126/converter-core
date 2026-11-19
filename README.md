@@ -23,7 +23,9 @@ cargo run --bin converter -- pdf fill-form form.pdf --values values.json [--flat
 Status: feature-complete against the Node backend. Ported: format matrix, engine discovery, LibreOffice (direct + raster),
 pandoc, ffmpeg stills, heif, assimp, Calibre, native images, audio/video with progress, YouTube download (mp3/mp4 via yt-dlp), PDF->Word/PPT/Excel/Markdown, fonts and Parquet/ORC/Feather (via the bundled Python scripts), Word tables to XLSX, PSD layers to PNGs + manifest (`ag-psd` crate; limits and a panic guard because it parses untrusted files), email (.eml), archives (zip/tar/tar.gz/tar.bz2/tar.zst/7z via 7z, with bomb/traversal/symlink checks), data formats (CSV/TSV/JSON/JSONL/YAML/TOML/INI/XML/SQLite). PDF page tools (merge, split, extract, remove, organize, rotate, crop, watermark, page numbers, scan-to-PDF, edit, sign, form fields, fill-form with flatten, redact, compare, OCR; protect, unlock, repair, compress via qpdf). Everything the Node backend converts is ported.
 
-Python routes need `python3` plus `pdf2docx pdfplumber python-pptx openpyxl python-docx` (PDF) or `fonttools brotli` (fonts).
+Python routes (PDF to Word/PowerPoint/Excel, Parquet/ORC/Feather, fonts, compare, redact) need Python with `pdf2docx pdfplumber python-pptx openpyxl python-docx pymupdf<2 pyarrow fonttools brotli`.
+You do not have to set that up yourself: `converter engines install python` downloads a portable CPython and installs the
+packages into the engines folder (~750 MB), and that copy is preferred over any system Python.
 `CONVERTER_BIN_<TOOL>` (e.g. `CONVERTER_BIN_PYTHON`) points any engine at a specific executable.
 
 Engines are downloaded into the user's data folder (`CONVERTER_ENGINES_DIR` overrides it) from the pinned
