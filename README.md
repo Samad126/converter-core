@@ -30,6 +30,7 @@ Python routes need `python3` plus `pdf2docx pdfplumber python-pptx openpyxl pyth
 Engines are downloaded into the user's data folder (`CONVERTER_ENGINES_DIR` overrides it) from the pinned
 list in `data/engines.json` (url, sha256, size per platform). Lookup order: `CONVERTER_BIN_<TOOL>` -> our own
 downloaded copy -> `PATH`. Downloaded today: pandoc, qpdf, 7zip, yt-dlp, ffmpeg, and LibreOffice on Windows (MSI, extracted with
-`msiexec /a`, no admin rights) and macOS (DMG, copied out with `ditto`). CI installs it for real on both and converts a
-document with that copy. Not yet downloadable (use a package manager): LibreOffice on Linux, Calibre, Tesseract,
-heif, assimp, Python packages.
+`msiexec /a`, no admin rights) and macOS (DMG, copied out with `ditto`), and Calibre on all three (tarball / MSI / DMG). CI installs both
+for real and converts a document / an ebook with that copy. Calibre on Linux also needs a few system libraries
+(`libegl1 libopengl0 libxcb-cursor0 libxkbcommon0`); the app says so instead of showing a traceback. Not yet
+downloadable (use a package manager): LibreOffice on Linux, Tesseract, heif, assimp, Python packages.
