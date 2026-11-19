@@ -78,6 +78,18 @@ pub async fn run(cfg: &Config, op: &str, files: &[PathBuf], flag: &dyn Fn(&str) 
             println!("{}", serde_json::to_string_pretty(&report).unwrap());
             Ok(vec![])
         }
+        "form-fields" => { println!("{}", serde_json::to_string_pretty(&crate::pdf::forms::list_fields(&data)?).unwrap()); Ok(vec![]) }
+        "fill-form" => {
+            let json = tokio::fs::read_to_string(need("values")?).await?;
+            let map: serde_json::Map<String, serde_json::Value> = serde_json::from_str(&json).map_err(|e| bad(format!("The values file is not valid: {e}")))?;
+            let mut values = vec![];
+            for (k, v) in map {
+                let fv = match v { serde_json::Value::Bool(b) => crate::pdf::forms::FieldValue::Bool(b), serde_json::Value::String(s) => crate::pdf::forms::FieldValue::Text(s),
+                    other => return Err(Error::new(ErrorCode::EInvalidField, format!("The value given for field \"{k}\" must be text or true/false, not {other}."))) };
+                values.push((k, fv));
+            }
+            one("-filled", crate::pdf::forms::fill(&data, &values, flag("flatten").as_deref() == Some("true"))?).await
+        }
         "watermark" => one("-watermarked", overlay::watermark(&data, &need("text")?, opt_sel("pages")?.as_deref())?).await,
         "page-numbers" => {
             let pos = match flag("position").as_deref() { None | Some("bottom-center") => overlay::NumberPosition::BottomCenter,

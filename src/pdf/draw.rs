@@ -119,6 +119,9 @@ impl Pdf {
         name
     }
 
+    /// Object id of the (lazily created) standard font, for use in appearance streams.
+    pub fn std_font_object(&mut self, f: Std) -> ObjectId { self.std_font(f); self.std_fonts[&f].1 }
+
     pub fn add_truetype(&mut self, tt: TrueType) -> FontRef {
         let name = self.next_name("T");
         self.tt_fonts.push((tt, name, None, Default::default()));
@@ -278,7 +281,7 @@ impl Pdf {
     /// Queues operators to run after the page's existing content.
     pub fn push(&mut self, page: ObjectId, ops: &str) { self.new_content.entry(page).or_default().push_str(ops); }
 
-    fn add_resource(&mut self, page: ObjectId, category: &str, name: &str, target: ObjectId) -> Result<()> {
+    pub(crate) fn add_resource(&mut self, page: ObjectId, category: &str, name: &str, target: ObjectId) -> Result<()> {
         // Resources may be direct or indirect; so may the category dictionary.
         let res_ref = self.doc.get_dictionary(page).map_err(internal)?.get(b"Resources").ok().and_then(|o| o.as_reference().ok());
         let cat_obj = {
