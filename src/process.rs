@@ -33,6 +33,11 @@ fn clip(mut s: String, max: usize) -> String {
 }
 
 pub async fn run(bin: &Path, args: &[String], workspace: &Path, timeout: Duration) -> Result<Outcome> {
+    run_env(bin, args, workspace, timeout, &[]).await
+}
+
+/// Like `run`, with extra environment variables (e.g. a real `HOME` for pip's user site).
+pub async fn run_env(bin: &Path, args: &[String], workspace: &Path, timeout: Duration, env: &[(&str, String)]) -> Result<Outcome> {
     let mut cmd = Command::new(bin);
     cmd.args(args)
         .current_dir(workspace)
@@ -45,6 +50,7 @@ pub async fn run(bin: &Path, args: &[String], workspace: &Path, timeout: Duratio
         .env("LANG", "C.UTF-8")
         .env("LC_ALL", "C.UTF-8")
         .env("JAVA_TOOL_OPTIONS", "");
+    for (k, v) in env { cmd.env(k, v); }
     #[cfg(target_os = "linux")]
     cmd.env("SAL_USE_VCLPLUGIN", "svp");
     #[cfg(unix)]

@@ -5,9 +5,10 @@ mod email;
 mod extract;
 mod image;
 mod office;
+pub mod python;
 mod simple;
 
-use crate::{engines, formats::{Engine, Resolved}, Config, Error, ErrorCode, Result};
+use crate::{engines, formats::{Engine, Resolved}, Config, Error, Result};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
@@ -37,6 +38,7 @@ pub async fn run(ctx: &Ctx<'_>, conv: &Resolved) -> Result<Vec<PathBuf>> {
         Engine::Archive => archive::run(ctx, conv).await,
         Engine::Email => email::run(ctx, conv).await,
         Engine::Extract => extract::run(ctx, conv).await,
+        Engine::PdfEngine | Engine::Font => python::run(ctx, conv).await,
         Engine::Data => data::run(ctx, conv).await,
         Engine::Pandoc => simple::pandoc(ctx, conv).await,
         Engine::Ffmpeg if image::can_handle(conv) => image::run(ctx, conv).await,
@@ -44,10 +46,6 @@ pub async fn run(ctx: &Ctx<'_>, conv: &Resolved) -> Result<Vec<PathBuf>> {
         Engine::Heif => simple::heif(ctx, conv).await,
         Engine::Assimp => simple::assimp(ctx, conv).await,
         Engine::Ebook => simple::ebook(ctx, conv).await,
-        other => Err(Error::new(
-            ErrorCode::EUnsupported,
-            format!("{other:?} conversions are not available in this build yet."),
-        )),
     }
 }
 

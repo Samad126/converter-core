@@ -84,6 +84,9 @@ fn find_in_dir(dir: &Path, bin: &str, depth: u32) -> Option<PathBuf> {
 
 /// Lookup order: user-picked path → our own downloaded copy → PATH + well-known dirs.
 pub fn resolve(tool: &Tool, cfg: &Config, user_path: Option<&Path>) -> Option<PathBuf> {
+    // `CONVERTER_BIN_<NAME>` (e.g. CONVERTER_BIN_PYTHON, CONVERTER_BIN_7ZIP) wins over everything.
+    let var = format!("CONVERTER_BIN_{}", tool.name.to_uppercase().replace('-', "_"));
+    if let Some(p) = std::env::var_os(var).map(PathBuf::from).filter(|p| p.is_file()) { return Some(p); }
     if let Some(p) = user_path { if p.is_file() { return Some(p.to_path_buf()); } }
     let own = cfg.engines_dir.join(tool.name);
     for bin in tool.bins {
