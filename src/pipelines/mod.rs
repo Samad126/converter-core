@@ -12,6 +12,13 @@ use crate::{engines, formats::{Engine, Resolved}, Config, Error, Result};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
+/// The external tool a conversion really needs, or `None` when it runs in pure Rust
+/// (the native image path never touches ffmpeg, so a PNG -> WebP must not ask for it).
+pub fn required_tool_for(conv: &Resolved) -> Option<&'static str> {
+    if conv.engine == Engine::Ffmpeg && image::can_handle(conv) { return None; }
+    engines::required_tool(conv.engine)
+}
+
 pub struct Ctx<'a> {
     pub cfg: &'a Config,
     pub workspace: PathBuf,
@@ -64,4 +71,19 @@ pub fn collect_produced(dir: &Path, ext: &str) -> Vec<PathBuf> {
         (digits.parse::<u64>().unwrap_or(0), name)
     });
     v
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::formats::resolve_conversion;
+    #[test] fn native_images_need_no_external_tool() {
+        assert_eq!(required_tool_for(&resolve_conversion(".png", "webp").unwrap()), None);
+        assert_eq!(required_tool_for(&resolve_conversion(".jpg", "bmp").unwrap()), None);
+    }
+    #[test] fn non_native_routes_still_name_their_tool() {
+        assert_eq!(required_tool_for(&resolve_conversion(".png", "avif").unwrap()), Some("ffmpeg"));
+        assert_eq!(required_tool_for(&resolve_conversion(".docx", "pdf").unwrap()), Some("libreoffice"));
+        assert_eq!(required_tool_for(&resolve_conversion(".csv", "json").unwrap()), None);
+    }
 }
