@@ -23,7 +23,8 @@ enum Cmd {
           #[arg(long)] out: Option<std::path::PathBuf>, #[arg(long)] pages: Option<String>, #[arg(long)] order: Option<String>,
           #[arg(long)] every: Option<String>, #[arg(long)] degrees: Option<String>, #[arg(long)] password: Option<String>,
           #[arg(long)] level: Option<String>, #[arg(long)] left: Option<String>, #[arg(long)] right: Option<String>,
-          #[arg(long)] top: Option<String>, #[arg(long)] bottom: Option<String> },
+          #[arg(long)] top: Option<String>, #[arg(long)] bottom: Option<String>,
+          #[arg(long)] text: Option<String>, #[arg(long)] position: Option<String>, #[arg(long)] start: Option<String>, #[arg(long)] elements: Option<String> },
     /// Show which external tools are installed and how to get the missing ones.
     Doctor,
 }
@@ -72,11 +73,12 @@ async fn main() {
                 Err(e) => { eprintln!("\n{}: {}", e.code.as_str(), e.message); std::process::exit(1); }
             }
         }
-        Cmd::Pdf { op, files, out, pages, order, every, degrees, password, level, left, right, top, bottom } => {
+        Cmd::Pdf { op, files, out, pages, order, every, degrees, password, level, left, right, top, bottom, text, position, start, elements } => {
             let cfg = Config::default();
             let flag = |n: &str| match n { "pages" => pages.clone(), "order" => order.clone(), "every" => every.clone(), "degrees" => degrees.clone(),
                 "password" => password.clone(), "level" => level.clone(), "left" => left.clone(), "right" => right.clone(),
-                "top" => top.clone(), "bottom" => bottom.clone(), _ => None };
+                "top" => top.clone(), "bottom" => bottom.clone(), "text" => text.clone(), "position" => position.clone(),
+                "start" => start.clone(), "elements" => elements.clone(), _ => None };
             match converter_core::pdf_cli::run(&cfg, &op, &files, &flag, out).await {
                 Ok(fs) => for f in fs { println!("{}", f.display()); },
                 Err(e) => { eprintln!("{}: {}", e.code.as_str(), e.message); std::process::exit(1); }

@@ -1,5 +1,5 @@
 //! `converter pdf <op> …` — thin file-in/file-out wrapper over `pdf::*` for the CLI and tests.
-use crate::pdf::{pages, qpdf, ranges};
+use crate::pdf::{draw::ImageFormat, overlay, pages, qpdf, ranges};
 use crate::{convert::unique_path, Config, Error, ErrorCode, Result};
 use std::path::{Path, PathBuf};
 
@@ -65,6 +65,34 @@ pub async fn run(cfg: &Config, op: &str, files: &[PathBuf], flag: &dyn Fn(&str) 
             let level = match flag("level").as_deref() { None | Some("medium") => qpdf::CompressLevel::Medium, Some("low") => qpdf::CompressLevel::Low,
                 Some("high") => qpdf::CompressLevel::High, Some(_) => return Err(bad("--level must be low, medium or high")) };
             one("-compressed", qpdf::run(cfg, qpdf::Op::Compress(level), &data).await?).await
+        }
+        "watermark" => one("-watermarked", overlay::watermark(&data, &need("text")?, opt_sel("pages")?.as_deref())?).await,
+        "page-numbers" => {
+            let pos = match flag("position").as_deref() { None | Some("bottom-center") => overlay::NumberPosition::BottomCenter,
+                Some("bottom-right") => overlay::NumberPosition::BottomRight, Some("bottom-left") => overlay::NumberPosition::BottomLeft,
+                Some(_) => return Err(bad("--position must be bottom-center, bottom-right or bottom-left")) };
+            one("-numbered", overlay::page_numbers(&data, pos, num("start")?.unwrap_or(1.0) as i64)?).await
+        }
+        "scan-to-pdf" => {
+            let mut imgs = vec![];
+            for f in files {
+                let fmt = match crate::formats::extension_of(f).as_str() { ".png" => ImageFormat::Png, ".jpg" | ".jpeg" => ImageFormat::Jpg,
+                    e => return Err(bad(format!("\"{e}\" is not a PNG or JPG image."))) };
+                imgs.push((read(f).await?, fmt));
+            }
+            one("-scan", overlay::scan_to_pdf(&imgs)?).await
+        }
+        "edit" | "sign" => {
+            // --elements <json file>; extra files after the PDF are the images the elements point at.
+            let json = tokio::fs::read_to_string(need("elements")?).await?;
+            let mut imgs = vec![];
+            for f in &files[1..] {
+                let fmt = if crate::formats::extension_of(f) == ".png" { ImageFormat::Png } else { ImageFormat::Jpg };
+                imgs.push((read(f).await?, fmt));
+            }
+            let parse_err = |e: serde_json::Error| bad(format!("The elements file is not valid: {e}"));
+            if op == "edit" { one("-edited", overlay::edit(&data, &serde_json::from_str::<Vec<overlay::EditElement>>(&json).map_err(parse_err)?, &imgs)?).await }
+            else { one("-signed", overlay::sign(&data, &serde_json::from_str::<Vec<overlay::SignElement>>(&json).map_err(parse_err)?, &imgs)?).await }
         }
         other => Err(bad(format!("Unknown PDF operation \"{other}\"."))),
     }

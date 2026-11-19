@@ -19,12 +19,12 @@ pub fn save(mut doc: Document) -> Result<Vec<u8>> {
 
 pub fn page_count(bytes: &[u8]) -> Result<usize> { Ok(load(bytes)?.get_pages().len()) }
 
-fn page_ids(doc: &Document) -> Vec<ObjectId> { doc.get_pages().into_values().collect() }
+pub(super) fn page_ids(doc: &Document) -> Vec<ObjectId> { doc.get_pages().into_values().collect() }
 
 const INHERITED: [&[u8]; 4] = [b"MediaBox", b"CropBox", b"Resources", b"Rotate"];
 
 /// Pushes inherited page attributes down onto each page, so pages can be re-parented freely.
-fn materialize_inherited(doc: &mut Document) {
+pub(super) fn materialize_inherited(doc: &mut Document) {
     for id in page_ids(doc) {
         let mut found: Vec<(&[u8], Object)> = vec![];
         for key in INHERITED {
@@ -124,7 +124,7 @@ pub fn split(bytes: &[u8], every: usize) -> Result<Vec<Vec<u8>>> {
 
 fn num(o: &Object) -> Option<f64> { o.as_float().ok().map(f64::from).or_else(|| o.as_i64().ok().map(|i| i as f64)) }
 
-fn media_box(doc: &Document, id: ObjectId) -> Option<[f64; 4]> {
+pub(super) fn media_box(doc: &Document, id: ObjectId) -> Option<[f64; 4]> {
     let arr = doc.get_dictionary(id).ok()?.get(b"MediaBox").ok()?;
     let arr = match arr { Object::Reference(r) => doc.get_object(*r).ok()?, o => o }.as_array().ok()?;
     let v: Vec<f64> = arr.iter().filter_map(|o| match o { Object::Reference(r) => doc.get_object(*r).ok().and_then(num), o => num(o) }).collect();
@@ -170,7 +170,7 @@ pub fn crop(bytes: &[u8], m: CropMargins, indices: Option<&[usize]>) -> Result<V
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use lopdf::content::{Content, Operation};
     use lopdf::Stream;
