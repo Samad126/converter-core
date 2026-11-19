@@ -17,6 +17,11 @@ pub fn unique_path(dir: &Path, stem: &str, ext: &str) -> PathBuf {
     (1..).map(|n| dir.join(format!("{stem} ({n}){ext}"))).find(|p| !p.exists()).unwrap()
 }
 
+/// Where a result goes: `name.ext`, then `name (1).ext`... unless the config says to replace.
+pub fn output_path(cfg: &Config, dir: &Path, stem: &str, ext: &str) -> PathBuf {
+    if cfg.overwrite_existing { dir.join(format!("{stem}{ext}")) } else { unique_path(dir, stem, ext) }
+}
+
 /// Returns the written files (one, or one `.zip` when the route produced several).
 pub async fn convert_file(cfg: &Config, input: &Path, target: &str, opts: ConvertOptions) -> Result<Vec<PathBuf>> {
     let ext = formats::extension_of(input);
@@ -55,11 +60,11 @@ pub async fn convert_file(cfg: &Config, input: &Path, target: &str, opts: Conver
     if let Some(s) = stem.strip_suffix(".tar") { stem = s.to_string(); }
 
     let written = if produced.len() == 1 {
-        let dest = unique_path(&dest_dir, &stem, &conv.target.extension);
+        let dest = output_path(cfg, &dest_dir, &stem, &conv.target.extension);
         tokio::fs::copy(&produced[0], &dest).await?;
         dest
     } else {
-        let dest = unique_path(&dest_dir, &stem, ".zip");
+        let dest = output_path(cfg, &dest_dir, &stem, ".zip");
         let file = std::fs::File::create(&dest)?;
         let mut zip = zip::ZipWriter::new(file);
         let opt = zip::write::SimpleFileOptions::default();
@@ -72,4 +77,18 @@ pub async fn convert_file(cfg: &Config, input: &Path, target: &str, opts: Conver
         dest
     };
     Ok(vec![written])
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test] fn output_path_numbers_or_replaces() {
+        let d = std::env::temp_dir().join(format!("outpath-{}", std::process::id())); std::fs::create_dir_all(&d).unwrap();
+        std::fs::write(d.join("a.pdf"), "x").unwrap();
+        let mut cfg = Config::default();
+        assert_eq!(output_path(&cfg, &d, "a", ".pdf").file_name().unwrap(), "a (1).pdf");
+        cfg.overwrite_existing = true;
+        assert_eq!(output_path(&cfg, &d, "a", ".pdf").file_name().unwrap(), "a.pdf");
+        assert_eq!(output_path(&cfg, &d, "b", ".pdf").file_name().unwrap(), "b.pdf");
+    }
 }

@@ -25,6 +25,8 @@ pub struct Config {
     pub max_archive_uncompressed_bytes: u64,
     pub youtube_max_filesize_bytes: u64,
     pub max_page_operation_files: usize,
+    /// Replace an existing output file instead of writing `name (1).ext` beside it.
+    pub overwrite_existing: bool,
     /// Per-job temp dirs live here.
     pub temp_root: PathBuf,
     /// Downloaded engines live here (`<engines_dir>/<name>/`).
@@ -55,6 +57,7 @@ impl Default for Config {
             max_archive_uncompressed_bytes: 512 * MB,
             youtube_max_filesize_bytes: 200 * MB,
             max_page_operation_files: 20,
+            overwrite_existing: false,
             temp_root: cache.join("work"),
             engines_dir: std::env::var_os("CONVERTER_ENGINES_DIR").map(PathBuf::from).unwrap_or_else(|| data.join("engines")),
         }

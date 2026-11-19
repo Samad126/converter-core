@@ -1,6 +1,6 @@
 //! Audio/video transcoding with progress. Port of the `/media/{target}` job path:
 //! `ffmpeg -y -i in out`, plus `-progress pipe:1` so the UI gets a real percentage.
-use crate::convert::{unique_path, ConvertOptions};
+use crate::convert::{output_path, ConvertOptions};
 use crate::formats::{matrix, MediaFormat};
 use crate::progress::{Progress, ProgressFn};
 use crate::{engines, process, workspace::Workspace, Config, Error, ErrorCode, Result};
@@ -79,7 +79,7 @@ pub async fn convert_media(cfg: &Config, input: &Path, target: &str, opts: Conve
     let dest_dir = opts.out_dir.unwrap_or_else(|| input.parent().map(Path::to_path_buf).unwrap_or_default());
     tokio::fs::create_dir_all(&dest_dir).await?;
     let stem = input.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_else(|| "converted".into());
-    let dest = unique_path(&dest_dir, &stem, &fmt.extension);
+    let dest = output_path(cfg, &dest_dir, &stem, &fmt.extension);
     tokio::fs::copy(&work_out, &dest).await?;
     progress(Progress::Finished);
     Ok(dest)

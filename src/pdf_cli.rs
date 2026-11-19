@@ -1,15 +1,15 @@
 //! `converter pdf <op> …` — thin file-in/file-out wrapper over `pdf::*` for the CLI and tests.
 use crate::pdf::{draw::ImageFormat, overlay, pages, qpdf, ranges};
-use crate::{convert::unique_path, Config, Error, ErrorCode, Result};
+use crate::{convert::output_path, Config, Error, ErrorCode, Result};
 use std::path::{Path, PathBuf};
 
 fn bad(m: impl Into<String>) -> Error { Error::new(ErrorCode::EBadRequest, m) }
 
 async fn read(p: &Path) -> Result<Vec<u8>> { Ok(tokio::fs::read(p).await?) }
 
-async fn write(dir: &Path, stem: &str, suffix: &str, data: &[u8]) -> Result<PathBuf> {
+async fn write(cfg: &Config, dir: &Path, stem: &str, suffix: &str, data: &[u8]) -> Result<PathBuf> {
     tokio::fs::create_dir_all(dir).await?;
-    let dest = unique_path(dir, &format!("{stem}{suffix}"), ".pdf");
+    let dest = output_path(cfg, dir, &format!("{stem}{suffix}"), ".pdf");
     tokio::fs::write(&dest, data).await?;
     Ok(dest)
 }
@@ -26,7 +26,7 @@ pub async fn run(cfg: &Config, op: &str, files: &[PathBuf], flag: &(dyn Fn(&str)
     let sel = |name: &str| -> Result<Vec<usize>> { ranges::parse_selection(&need(name)?, count()?) };
     let opt_sel = |name: &str| -> Result<Option<Vec<usize>>> { flag(name).map(|s| ranges::parse_selection(&s, count()?)).transpose() };
 
-    let one = |suffix: &'static str, bytes: Vec<u8>| { let dir = dir.clone(); let stem = stem.clone(); async move { write(&dir, &stem, suffix, &bytes).await.map(|p| vec![p]) } };
+    let one = |suffix: &'static str, bytes: Vec<u8>| { let dir = dir.clone(); let stem = stem.clone(); async move { write(cfg, &dir, &stem, suffix, &bytes).await.map(|p| vec![p]) } };
     match op {
         "merge" => {
             if files.len() < 2 { return Err(Error::new(ErrorCode::ETooFewFiles, "Merging needs at least two PDFs.")); }
@@ -37,7 +37,7 @@ pub async fn run(cfg: &Config, op: &str, files: &[PathBuf], flag: &(dyn Fn(&str)
         "split" => {
             let every = num("every")?.unwrap_or(1.0) as usize;
             let mut out = vec![];
-            for (i, part) in pages::split(&data, every)?.iter().enumerate() { out.push(write(&dir, &stem, &format!("-part{}", i + 1), part).await?); }
+            for (i, part) in pages::split(&data, every)?.iter().enumerate() { out.push(write(cfg, &dir, &stem, &format!("-part{}", i + 1), part).await?); }
             Ok(out)
         }
         "extract" => one("-extracted", pages::select_pages(&data, &sel("pages")?)?).await,

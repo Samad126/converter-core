@@ -1,5 +1,5 @@
 //! YouTube → mp3/mp4 through yt-dlp. Port of `youtube-url.ts`, `ytdlp.engine.ts`, `youtube.service.ts`.
-use crate::convert::unique_path;
+use crate::convert::output_path;
 use crate::progress::{Progress, ProgressFn};
 use crate::{engines, process, workspace::Workspace, Config, Error, ErrorCode, Result};
 use std::path::{Path, PathBuf};
@@ -122,7 +122,7 @@ pub async fn download(cfg: &Config, raw_url: &str, target: Target, out_dir: &Pat
     let name = name_for_title(&title, target.ext(), 100);
     let stem = name.strip_suffix(target.ext()).unwrap_or(&name).to_string();
     tokio::fs::create_dir_all(out_dir).await?;
-    let dest = unique_path(out_dir, &stem, target.ext());
+    let dest = output_path(cfg, out_dir, &stem, target.ext());
     tokio::fs::copy(&out_path, &dest).await?;
     progress(Progress::Finished);
     Ok(dest)
