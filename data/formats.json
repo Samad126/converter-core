@@ -1,0 +1,2657 @@
+{
+ "targets": {
+  "pdf": {
+   "id": "pdf",
+   "extension": ".pdf",
+   "mediaType": "application/pdf",
+   "label": "PDF",
+   "mode": "direct",
+   "multiple": false,
+   "filters": {
+    "writer": "writer_pdf_Export",
+    "calc": "calc_pdf_Export",
+    "impress": "impress_pdf_Export",
+    "draw": "draw_pdf_Export"
+   },
+   "engineFrom": {
+    "pandoc": [
+     ".md"
+    ]
+   }
+  },
+  "odt": {
+   "id": "odt",
+   "extension": ".odt",
+   "mediaType": "application/vnd.oasis.opendocument.text",
+   "label": "ODT",
+   "mode": "direct",
+   "multiple": false,
+   "filters": {
+    "writer": "writer8"
+   },
+   "engineFrom": {
+    "pandoc": [
+     ".md",
+     ".rst",
+     ".tex",
+     ".textile",
+     ".org",
+     ".opml",
+     ".muse",
+     ".ipynb"
+    ]
+   }
+  },
+  "docx": {
+   "id": "docx",
+   "extension": ".docx",
+   "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+   "label": "DOCX",
+   "mode": "direct",
+   "multiple": false,
+   "filters": {
+    "writer": "MS Word 2007 XML"
+   },
+   "engineFrom": {
+    "pdf": [
+     ".pdf"
+    ],
+    "pandoc": [
+     ".md",
+     ".rst",
+     ".tex",
+     ".textile",
+     ".org",
+     ".opml",
+     ".muse",
+     ".ipynb"
+    ]
+   }
+  },
+  "txt": {
+   "id": "txt",
+   "extension": ".txt",
+   "mediaType": "text/plain; charset=utf-8",
+   "label": "TXT",
+   "mode": "direct",
+   "multiple": false,
+   "filters": {
+    "writer": "Text (encoded):UTF8"
+   },
+   "engineFrom": {
+    "pandoc": [
+     ".md",
+     ".rst",
+     ".tex",
+     ".textile",
+     ".org",
+     ".opml",
+     ".muse",
+     ".ipynb"
+    ],
+    "email": [
+     ".eml"
+    ]
+   }
+  },
+  "html": {
+   "id": "html",
+   "extension": ".html",
+   "mediaType": "text/html; charset=utf-8",
+   "label": "HTML",
+   "mode": "direct",
+   "multiple": false,
+   "filters": {
+    "writer": "HTML (StarWriter)",
+    "calc": "HTML (StarCalc)"
+   },
+   "engineFrom": {
+    "pandoc": [
+     ".md",
+     ".rst",
+     ".tex",
+     ".textile",
+     ".org",
+     ".opml",
+     ".muse",
+     ".ipynb"
+    ],
+    "email": [
+     ".eml"
+    ]
+   }
+  },
+  "rtf": {
+   "id": "rtf",
+   "extension": ".rtf",
+   "mediaType": "application/rtf",
+   "label": "RTF",
+   "mode": "direct",
+   "multiple": false,
+   "filters": {
+    "writer": "Rich Text Format"
+   },
+   "engineFrom": {
+    "pandoc": [
+     ".md",
+     ".rst",
+     ".tex",
+     ".textile",
+     ".org",
+     ".opml",
+     ".muse",
+     ".ipynb"
+    ]
+   }
+  },
+  "epub": {
+   "id": "epub",
+   "extension": ".epub",
+   "mediaType": "application/epub+zip",
+   "label": "EPUB",
+   "mode": "direct",
+   "multiple": false,
+   "filters": {
+    "writer": "EPUB"
+   },
+   "engineFrom": {
+    "ebook": [
+     ".mobi",
+     ".azw3",
+     ".fb2",
+     ".lrf",
+     ".pdb"
+    ]
+   }
+  },
+  "ods": {
+   "id": "ods",
+   "extension": ".ods",
+   "mediaType": "application/vnd.oasis.opendocument.spreadsheet",
+   "label": "ODS",
+   "mode": "direct",
+   "multiple": false,
+   "filters": {
+    "calc": "calc8"
+   }
+  },
+  "xlsx": {
+   "id": "xlsx",
+   "extension": ".xlsx",
+   "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+   "label": "XLSX",
+   "mode": "direct",
+   "multiple": false,
+   "filters": {
+    "calc": "Calc MS Excel 2007 XML"
+   },
+   "engineFrom": {
+    "pdf": [
+     ".pdf"
+    ]
+   }
+  },
+  "csv": {
+   "id": "csv",
+   "extension": ".csv",
+   "mediaType": "text/csv; charset=utf-8",
+   "label": "CSV",
+   "mode": "direct",
+   "multiple": false,
+   "filters": {
+    "calc": "Text - txt - csv (StarCalc):44,34,76,1,,0,false,true,true"
+   },
+   "engineFrom": {
+    "data": [
+     ".tsv",
+     ".json",
+     ".yaml",
+     ".yml",
+     ".jsonl",
+     ".xml",
+     ".toml",
+     ".ini",
+     ".sqlite",
+     ".parquet",
+     ".orc",
+     ".feather"
+    ]
+   }
+  },
+  "odp": {
+   "id": "odp",
+   "extension": ".odp",
+   "mediaType": "application/vnd.oasis.opendocument.presentation",
+   "label": "ODP",
+   "mode": "direct",
+   "multiple": false,
+   "filters": {
+    "impress": "impress8"
+   }
+  },
+  "pptx": {
+   "id": "pptx",
+   "extension": ".pptx",
+   "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+   "label": "PPTX",
+   "mode": "direct",
+   "multiple": false,
+   "filters": {
+    "impress": "Impress MS PowerPoint 2007 XML"
+   },
+   "engineFrom": {
+    "pdf": [
+     ".pdf"
+    ]
+   }
+  },
+  "png": {
+   "id": "png",
+   "extension": ".png",
+   "mediaType": "image/png",
+   "label": "PNG",
+   "mode": "raster",
+   "multiple": true,
+   "filters": {}
+  },
+  "jpg": {
+   "id": "jpg",
+   "extension": ".jpg",
+   "mediaType": "image/jpeg",
+   "label": "JPG",
+   "mode": "raster",
+   "multiple": true,
+   "filters": {}
+  },
+  "tables": {
+   "id": "tables",
+   "extension": ".xlsx",
+   "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+   "label": "XLSX (tables)",
+   "mode": "extract",
+   "multiple": false,
+   "filters": {},
+   "extractFrom": [
+    ".docx",
+    ".docm"
+   ]
+  },
+  "layers": {
+   "id": "layers",
+   "extension": ".png",
+   "mediaType": "image/png",
+   "label": "PNG (layers)",
+   "mode": "extract",
+   "multiple": true,
+   "filters": {},
+   "extractFrom": [
+    ".psd"
+   ]
+  },
+  "pdfa": {
+   "id": "pdfa",
+   "extension": ".pdf",
+   "mediaType": "application/pdf",
+   "label": "PDF/A",
+   "mode": "direct",
+   "multiple": false,
+   "filters": {
+    "draw": "draw_pdf_Export:{\"SelectPdfVersion\":{\"type\":\"long\",\"value\":1}}"
+   }
+  },
+  "markdown": {
+   "id": "markdown",
+   "extension": ".md",
+   "mediaType": "text/markdown; charset=utf-8",
+   "label": "Markdown",
+   "mode": "direct",
+   "multiple": false,
+   "filters": {},
+   "engineFrom": {
+    "pdf": [
+     ".pdf"
+    ],
+    "pandoc": [
+     ".rst",
+     ".tex",
+     ".textile",
+     ".org",
+     ".opml",
+     ".muse",
+     ".ipynb"
+    ]
+   }
+  },
+  "zip": {
+   "id": "zip",
+   "extension": ".zip",
+   "mediaType": "application/zip",
+   "label": "ZIP",
+   "mode": "archive",
+   "archiveWriter": "zip",
+   "multiple": false,
+   "filters": {}
+  },
+  "tar": {
+   "id": "tar",
+   "extension": ".tar",
+   "mediaType": "application/x-tar",
+   "label": "TAR",
+   "mode": "archive",
+   "archiveWriter": "tar",
+   "multiple": false,
+   "filters": {}
+  },
+  "tar.gz": {
+   "id": "tar.gz",
+   "extension": ".tar.gz",
+   "mediaType": "application/gzip",
+   "label": "TAR.GZ",
+   "mode": "archive",
+   "archiveWriter": "tar.gz",
+   "multiple": false,
+   "filters": {}
+  },
+  "tar.bz2": {
+   "id": "tar.bz2",
+   "extension": ".tar.bz2",
+   "mediaType": "application/x-bzip2",
+   "label": "TAR.BZ2",
+   "mode": "archive",
+   "archiveWriter": "tar.bz2",
+   "multiple": false,
+   "filters": {}
+  },
+  "7z": {
+   "id": "7z",
+   "extension": ".7z",
+   "mediaType": "application/x-7z-compressed",
+   "label": "7Z",
+   "mode": "archive",
+   "archiveWriter": "7z",
+   "multiple": false,
+   "filters": {}
+  },
+  "cbz": {
+   "id": "cbz",
+   "extension": ".cbz",
+   "mediaType": "application/vnd.comicbook+zip",
+   "label": "CBZ",
+   "mode": "archive",
+   "archiveWriter": "zip",
+   "multiple": false,
+   "filters": {}
+  },
+  "srt": {
+   "id": "srt",
+   "extension": ".srt",
+   "mediaType": "application/x-subrip",
+   "label": "SRT",
+   "mode": "transcode",
+   "multiple": false,
+   "filters": {}
+  },
+  "vtt": {
+   "id": "vtt",
+   "extension": ".vtt",
+   "mediaType": "text/vtt",
+   "label": "VTT",
+   "mode": "transcode",
+   "multiple": false,
+   "filters": {}
+  },
+  "ass": {
+   "id": "ass",
+   "extension": ".ass",
+   "mediaType": "text/x-ass",
+   "label": "ASS",
+   "mode": "transcode",
+   "multiple": false,
+   "filters": {}
+  },
+  "ssa": {
+   "id": "ssa",
+   "extension": ".ssa",
+   "mediaType": "text/x-ssa",
+   "label": "SSA",
+   "mode": "transcode",
+   "multiple": false,
+   "filters": {}
+  },
+  "tsv": {
+   "id": "tsv",
+   "extension": ".tsv",
+   "mediaType": "text/tab-separated-values; charset=utf-8",
+   "label": "TSV",
+   "mode": "data",
+   "multiple": false,
+   "filters": {}
+  },
+  "json": {
+   "id": "json",
+   "extension": ".json",
+   "mediaType": "application/json; charset=utf-8",
+   "label": "JSON",
+   "mode": "data",
+   "multiple": false,
+   "filters": {}
+  },
+  "yaml": {
+   "id": "yaml",
+   "extension": ".yaml",
+   "mediaType": "application/yaml; charset=utf-8",
+   "label": "YAML",
+   "mode": "data",
+   "multiple": false,
+   "filters": {}
+  },
+  "jsonl": {
+   "id": "jsonl",
+   "extension": ".jsonl",
+   "mediaType": "application/jsonl; charset=utf-8",
+   "label": "JSONL",
+   "mode": "data",
+   "multiple": false,
+   "filters": {}
+  },
+  "bmp": {
+   "id": "bmp",
+   "extension": ".bmp",
+   "mediaType": "image/bmp",
+   "label": "BMP",
+   "mode": "transcode",
+   "multiple": false,
+   "filters": {}
+  },
+  "gif": {
+   "id": "gif",
+   "extension": ".gif",
+   "mediaType": "image/gif",
+   "label": "GIF",
+   "mode": "transcode",
+   "multiple": false,
+   "filters": {}
+  },
+  "tiff": {
+   "id": "tiff",
+   "extension": ".tiff",
+   "mediaType": "image/tiff",
+   "label": "TIFF",
+   "mode": "transcode",
+   "multiple": false,
+   "filters": {}
+  },
+  "webp": {
+   "id": "webp",
+   "extension": ".webp",
+   "mediaType": "image/webp",
+   "label": "WEBP",
+   "mode": "transcode",
+   "multiple": false,
+   "filters": {}
+  },
+  "avif": {
+   "id": "avif",
+   "extension": ".avif",
+   "mediaType": "image/avif",
+   "label": "AVIF",
+   "mode": "transcode",
+   "multiple": false,
+   "filters": {}
+  },
+  "ico": {
+   "id": "ico",
+   "extension": ".ico",
+   "mediaType": "image/x-icon",
+   "label": "ICO",
+   "mode": "transcode",
+   "multiple": false,
+   "filters": {}
+  },
+  "png-image": {
+   "id": "png-image",
+   "extension": ".png",
+   "mediaType": "image/png",
+   "label": "PNG (image)",
+   "mode": "transcode",
+   "multiple": false,
+   "filters": {}
+  },
+  "jpg-image": {
+   "id": "jpg-image",
+   "extension": ".jpg",
+   "mediaType": "image/jpeg",
+   "label": "JPG (image)",
+   "mode": "transcode",
+   "multiple": false,
+   "filters": {}
+  },
+  "svg": {
+   "id": "svg",
+   "extension": ".svg",
+   "mediaType": "image/svg+xml",
+   "label": "SVG",
+   "mode": "direct",
+   "multiple": false,
+   "filters": {
+    "draw": "draw_svg_Export"
+   }
+  },
+  "heic": {
+   "id": "heic",
+   "extension": ".heic",
+   "mediaType": "image/heic",
+   "label": "HEIC",
+   "mode": "heif",
+   "multiple": false,
+   "filters": {}
+  },
+  "heif": {
+   "id": "heif",
+   "extension": ".heif",
+   "mediaType": "image/heif",
+   "label": "HEIF",
+   "mode": "heif",
+   "multiple": false,
+   "filters": {}
+  },
+  "emf": {
+   "id": "emf",
+   "extension": ".emf",
+   "mediaType": "image/emf",
+   "label": "EMF",
+   "mode": "direct",
+   "multiple": false,
+   "filters": {
+    "draw": "draw_emf_Export"
+   }
+  },
+  "wmf": {
+   "id": "wmf",
+   "extension": ".wmf",
+   "mediaType": "image/wmf",
+   "label": "WMF",
+   "mode": "direct",
+   "multiple": false,
+   "filters": {
+    "draw": "draw_wmf_Export"
+   }
+  },
+  "eps": {
+   "id": "eps",
+   "extension": ".eps",
+   "mediaType": "application/postscript",
+   "label": "EPS",
+   "mode": "direct",
+   "multiple": false,
+   "filters": {
+    "draw": "draw_eps_Export"
+   }
+  },
+  "jxl": {
+   "id": "jxl",
+   "extension": ".jxl",
+   "mediaType": "image/jxl",
+   "label": "JXL",
+   "mode": "transcode",
+   "multiple": false,
+   "filters": {}
+  },
+  "jp2": {
+   "id": "jp2",
+   "extension": ".jp2",
+   "mediaType": "image/jp2",
+   "label": "JPEG 2000",
+   "mode": "transcode",
+   "multiple": false,
+   "filters": {}
+  },
+  "qoi": {
+   "id": "qoi",
+   "extension": ".qoi",
+   "mediaType": "image/qoi",
+   "label": "QOI",
+   "mode": "transcode",
+   "multiple": false,
+   "filters": {}
+  },
+  "tga": {
+   "id": "tga",
+   "extension": ".tga",
+   "mediaType": "image/x-tga",
+   "label": "TGA",
+   "mode": "transcode",
+   "multiple": false,
+   "filters": {}
+  },
+  "pcx": {
+   "id": "pcx",
+   "extension": ".pcx",
+   "mediaType": "image/x-pcx",
+   "label": "PCX",
+   "mode": "transcode",
+   "multiple": false,
+   "filters": {}
+  },
+  "apng": {
+   "id": "apng",
+   "extension": ".apng",
+   "mediaType": "image/apng",
+   "label": "APNG",
+   "mode": "transcode",
+   "multiple": false,
+   "filters": {}
+  },
+  "xml": {
+   "id": "xml",
+   "extension": ".xml",
+   "mediaType": "application/xml",
+   "label": "XML",
+   "mode": "data",
+   "multiple": false,
+   "filters": {}
+  },
+  "toml": {
+   "id": "toml",
+   "extension": ".toml",
+   "mediaType": "application/toml",
+   "label": "TOML",
+   "mode": "data",
+   "multiple": false,
+   "filters": {}
+  },
+  "ini": {
+   "id": "ini",
+   "extension": ".ini",
+   "mediaType": "text/plain",
+   "label": "INI",
+   "mode": "data",
+   "multiple": false,
+   "filters": {}
+  },
+  "sqlite": {
+   "id": "sqlite",
+   "extension": ".sqlite",
+   "mediaType": "application/vnd.sqlite3",
+   "label": "SQLite",
+   "mode": "data",
+   "multiple": false,
+   "filters": {}
+  },
+  "tar.zst": {
+   "id": "tar.zst",
+   "extension": ".tar.zst",
+   "mediaType": "application/zstd",
+   "label": "TAR.ZST",
+   "mode": "archive",
+   "multiple": false,
+   "filters": {},
+   "archiveWriter": "tar.zst"
+  },
+  "obj": {
+   "id": "obj",
+   "extension": ".obj",
+   "mediaType": "model/obj",
+   "label": "OBJ",
+   "mode": "3d",
+   "multiple": false,
+   "filters": {}
+  },
+  "stl": {
+   "id": "stl",
+   "extension": ".stl",
+   "mediaType": "model/stl",
+   "label": "STL",
+   "mode": "3d",
+   "multiple": false,
+   "filters": {}
+  },
+  "ply": {
+   "id": "ply",
+   "extension": ".ply",
+   "mediaType": "model/ply",
+   "label": "PLY",
+   "mode": "3d",
+   "multiple": false,
+   "filters": {}
+  },
+  "glb": {
+   "id": "glb",
+   "extension": ".glb",
+   "mediaType": "model/gltf-binary",
+   "label": "GLB",
+   "mode": "3d",
+   "multiple": false,
+   "filters": {}
+  },
+  "3mf": {
+   "id": "3mf",
+   "extension": ".3mf",
+   "mediaType": "model/3mf",
+   "label": "3MF",
+   "mode": "3d",
+   "multiple": false,
+   "filters": {}
+  },
+  "mobi": {
+   "id": "mobi",
+   "extension": ".mobi",
+   "mediaType": "application/x-mobipocket-ebook",
+   "label": "MOBI",
+   "mode": "ebook",
+   "multiple": false,
+   "filters": {}
+  },
+  "azw3": {
+   "id": "azw3",
+   "extension": ".azw3",
+   "mediaType": "application/vnd.amazon.mobi8-ebook",
+   "label": "AZW3",
+   "mode": "ebook",
+   "multiple": false,
+   "filters": {}
+  },
+  "fb2": {
+   "id": "fb2",
+   "extension": ".fb2",
+   "mediaType": "application/x-fictionbook+xml",
+   "label": "FB2",
+   "mode": "ebook",
+   "multiple": false,
+   "filters": {}
+  },
+  "lrf": {
+   "id": "lrf",
+   "extension": ".lrf",
+   "mediaType": "application/x-sony-bbeb",
+   "label": "LRF",
+   "mode": "ebook",
+   "multiple": false,
+   "filters": {}
+  },
+  "pdb": {
+   "id": "pdb",
+   "extension": ".pdb",
+   "mediaType": "application/x-pilot",
+   "label": "PDB",
+   "mode": "ebook",
+   "multiple": false,
+   "filters": {}
+  },
+  "snb": {
+   "id": "snb",
+   "extension": ".snb",
+   "mediaType": "application/x-snb",
+   "label": "SNB",
+   "mode": "ebook",
+   "multiple": false,
+   "filters": {}
+  },
+  "kepub": {
+   "id": "kepub",
+   "extension": ".kepub.epub",
+   "mediaType": "application/epub+zip",
+   "label": "KEPUB",
+   "mode": "ebook",
+   "multiple": false,
+   "filters": {}
+  },
+  "ttf": {
+   "id": "ttf",
+   "extension": ".ttf",
+   "mediaType": "font/ttf",
+   "label": "TTF",
+   "mode": "font",
+   "multiple": false,
+   "filters": {}
+  },
+  "otf": {
+   "id": "otf",
+   "extension": ".otf",
+   "mediaType": "font/otf",
+   "label": "OTF",
+   "mode": "font",
+   "multiple": false,
+   "filters": {}
+  },
+  "woff": {
+   "id": "woff",
+   "extension": ".woff",
+   "mediaType": "font/woff",
+   "label": "WOFF",
+   "mode": "font",
+   "multiple": false,
+   "filters": {}
+  },
+  "woff2": {
+   "id": "woff2",
+   "extension": ".woff2",
+   "mediaType": "font/woff2",
+   "label": "WOFF2",
+   "mode": "font",
+   "multiple": false,
+   "filters": {}
+  },
+  "parquet": {
+   "id": "parquet",
+   "extension": ".parquet",
+   "mediaType": "application/vnd.apache.parquet",
+   "label": "Parquet",
+   "mode": "data",
+   "multiple": false,
+   "filters": {}
+  },
+  "orc": {
+   "id": "orc",
+   "extension": ".orc",
+   "mediaType": "application/x-orc",
+   "label": "ORC",
+   "mode": "data",
+   "multiple": false,
+   "filters": {}
+  },
+  "feather": {
+   "id": "feather",
+   "extension": ".feather",
+   "mediaType": "application/vnd.apache.arrow.file",
+   "label": "Feather",
+   "mode": "data",
+   "multiple": false,
+   "filters": {}
+  }
+ },
+ "sources": {
+  ".docx": {
+   "extension": ".docx",
+   "family": "writer",
+   "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+   "importFilter": "MS Word 2007 XML",
+   "targets": [
+    "pdf",
+    "odt",
+    "txt",
+    "html",
+    "rtf",
+    "epub",
+    "tables"
+   ]
+  },
+  ".docm": {
+   "extension": ".docm",
+   "family": "writer",
+   "mediaType": "application/vnd.ms-word.document.macroEnabled.12",
+   "importFilter": "MS Word 2007 XML",
+   "targets": [
+    "pdf",
+    "docx",
+    "odt",
+    "txt",
+    "html",
+    "rtf",
+    "epub",
+    "tables"
+   ]
+  },
+  ".doc": {
+   "extension": ".doc",
+   "family": "writer",
+   "mediaType": "application/msword",
+   "importFilter": "MS Word 97",
+   "targets": [
+    "pdf",
+    "docx",
+    "odt",
+    "txt",
+    "html",
+    "rtf",
+    "epub"
+   ]
+  },
+  ".dot": {
+   "extension": ".dot",
+   "family": "writer",
+   "mediaType": "application/msword",
+   "importFilter": "MS Word 97 Vorlage",
+   "targets": [
+    "pdf",
+    "docx",
+    "odt",
+    "txt",
+    "html",
+    "rtf",
+    "epub"
+   ]
+  },
+  ".dotx": {
+   "extension": ".dotx",
+   "family": "writer",
+   "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.template",
+   "importFilter": "MS Word 2007 XML Template",
+   "targets": [
+    "pdf",
+    "docx",
+    "odt",
+    "txt",
+    "html",
+    "rtf",
+    "epub"
+   ]
+  },
+  ".odt": {
+   "extension": ".odt",
+   "family": "writer",
+   "mediaType": "application/vnd.oasis.opendocument.text",
+   "importFilter": "writer8",
+   "targets": [
+    "pdf",
+    "docx",
+    "txt",
+    "html",
+    "rtf",
+    "epub"
+   ]
+  },
+  ".ods": {
+   "extension": ".ods",
+   "family": "calc",
+   "mediaType": "application/vnd.oasis.opendocument.spreadsheet",
+   "importFilter": "calc8",
+   "targets": [
+    "pdf",
+    "xlsx",
+    "html",
+    "csv"
+   ]
+  },
+  ".odg": {
+   "extension": ".odg",
+   "family": "draw",
+   "mediaType": "application/vnd.oasis.opendocument.graphics",
+   "importFilter": "draw8",
+   "targets": [
+    "pdf"
+   ]
+  },
+  ".odp": {
+   "extension": ".odp",
+   "family": "impress",
+   "mediaType": "application/vnd.oasis.opendocument.presentation",
+   "importFilter": "impress8",
+   "targets": [
+    "pdf",
+    "pptx",
+    "png",
+    "jpg"
+   ]
+  },
+  ".xlsx": {
+   "extension": ".xlsx",
+   "family": "calc",
+   "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+   "importFilter": "Calc MS Excel 2007 XML",
+   "targets": [
+    "pdf",
+    "ods",
+    "csv",
+    "html"
+   ]
+  },
+  ".xls": {
+   "extension": ".xls",
+   "family": "calc",
+   "mediaType": "application/vnd.ms-excel",
+   "importFilter": "MS Excel 97",
+   "targets": [
+    "pdf",
+    "xlsx",
+    "ods",
+    "csv",
+    "html"
+   ]
+  },
+  ".xlsm": {
+   "extension": ".xlsm",
+   "family": "calc",
+   "mediaType": "application/vnd.ms-excel.sheet.macroEnabled.12",
+   "importFilter": "Calc MS Excel 2007 XML",
+   "targets": [
+    "pdf",
+    "xlsx",
+    "ods",
+    "csv",
+    "html"
+   ]
+  },
+  ".pptx": {
+   "extension": ".pptx",
+   "family": "impress",
+   "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+   "importFilter": "Impress MS PowerPoint 2007 XML",
+   "targets": [
+    "pdf",
+    "odp",
+    "png",
+    "jpg"
+   ]
+  },
+  ".ppt": {
+   "extension": ".ppt",
+   "family": "impress",
+   "mediaType": "application/vnd.ms-powerpoint",
+   "importFilter": "MS PowerPoint 97",
+   "targets": [
+    "pdf",
+    "pptx",
+    "odp",
+    "png",
+    "jpg"
+   ]
+  },
+  ".pptm": {
+   "extension": ".pptm",
+   "family": "impress",
+   "mediaType": "application/vnd.ms-powerpoint.presentation.macroEnabled.12",
+   "importFilter": "Impress MS PowerPoint 2007 XML",
+   "targets": [
+    "pdf",
+    "pptx",
+    "odp",
+    "png",
+    "jpg"
+   ]
+  },
+  ".pps": {
+   "extension": ".pps",
+   "family": "impress",
+   "mediaType": "application/vnd.ms-powerpoint",
+   "importFilter": "MS PowerPoint 97 AutoPlay",
+   "targets": [
+    "pdf",
+    "pptx",
+    "odp",
+    "png",
+    "jpg"
+   ]
+  },
+  ".ppsx": {
+   "extension": ".ppsx",
+   "family": "impress",
+   "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.slideshow",
+   "importFilter": "Impress Office Open XML AutoPlay",
+   "targets": [
+    "pdf",
+    "pptx",
+    "odp",
+    "png",
+    "jpg"
+   ]
+  },
+  ".pot": {
+   "extension": ".pot",
+   "family": "impress",
+   "mediaType": "application/vnd.ms-powerpoint",
+   "importFilter": "MS PowerPoint 97 Vorlage",
+   "targets": [
+    "pdf",
+    "pptx",
+    "odp",
+    "png",
+    "jpg"
+   ]
+  },
+  ".potx": {
+   "extension": ".potx",
+   "family": "impress",
+   "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.template",
+   "importFilter": "Impress MS PowerPoint 2007 XML Template",
+   "targets": [
+    "pdf",
+    "pptx",
+    "odp",
+    "png",
+    "jpg"
+   ]
+  },
+  ".csv": {
+   "extension": ".csv",
+   "family": "calc",
+   "mediaType": "text/csv",
+   "importFilter": "Text - txt - csv (StarCalc)",
+   "targets": [
+    "xlsx",
+    "ods",
+    "pdf",
+    "html",
+    "tsv",
+    "json",
+    "yaml",
+    "jsonl",
+    "xml",
+    "toml",
+    "ini",
+    "sqlite",
+    "parquet",
+    "orc",
+    "feather"
+   ]
+  },
+  ".txt": {
+   "extension": ".txt",
+   "family": "writer",
+   "mediaType": "text/plain",
+   "importFilter": "Text",
+   "targets": [
+    "pdf",
+    "docx",
+    "odt",
+    "html",
+    "rtf",
+    "epub"
+   ]
+  },
+  ".html": {
+   "extension": ".html",
+   "family": "writer",
+   "mediaType": "text/html",
+   "importFilter": "HTML (StarWriter)",
+   "targets": [
+    "pdf",
+    "docx",
+    "odt",
+    "txt",
+    "rtf",
+    "epub"
+   ]
+  },
+  ".htm": {
+   "extension": ".htm",
+   "family": "writer",
+   "mediaType": "text/html",
+   "importFilter": "HTML (StarWriter)",
+   "targets": [
+    "pdf",
+    "docx",
+    "odt",
+    "txt",
+    "rtf",
+    "epub"
+   ]
+  },
+  ".rtf": {
+   "extension": ".rtf",
+   "family": "writer",
+   "mediaType": "application/rtf",
+   "importFilter": "Rich Text Format",
+   "targets": [
+    "docx",
+    "pdf",
+    "odt",
+    "txt",
+    "html",
+    "epub"
+   ]
+  },
+  ".png": {
+   "extension": ".png",
+   "family": "draw",
+   "mediaType": "image/png",
+   "importFilter": "draw_png_Import",
+   "targets": [
+    "pdf",
+    "svg",
+    "emf",
+    "wmf",
+    "eps",
+    "bmp",
+    "gif",
+    "tiff",
+    "webp",
+    "avif",
+    "ico",
+    "jpg-image",
+    "jxl",
+    "jp2",
+    "qoi",
+    "tga",
+    "pcx",
+    "apng",
+    "heic",
+    "heif"
+   ]
+  },
+  ".jpg": {
+   "extension": ".jpg",
+   "family": "draw",
+   "mediaType": "image/jpeg",
+   "importFilter": "draw_jpg_Import",
+   "targets": [
+    "pdf",
+    "svg",
+    "emf",
+    "wmf",
+    "eps",
+    "bmp",
+    "gif",
+    "tiff",
+    "webp",
+    "avif",
+    "ico",
+    "png-image",
+    "jxl",
+    "jp2",
+    "qoi",
+    "tga",
+    "pcx",
+    "apng",
+    "heic",
+    "heif"
+   ]
+  },
+  ".jpeg": {
+   "extension": ".jpeg",
+   "family": "draw",
+   "mediaType": "image/jpeg",
+   "importFilter": "draw_jpg_Import",
+   "targets": [
+    "pdf",
+    "svg",
+    "emf",
+    "wmf",
+    "eps",
+    "bmp",
+    "gif",
+    "tiff",
+    "webp",
+    "avif",
+    "ico",
+    "png-image",
+    "jpg-image",
+    "jxl",
+    "jp2",
+    "qoi",
+    "tga",
+    "pcx",
+    "apng",
+    "heic",
+    "heif"
+   ]
+  },
+  ".jpe": {
+   "extension": ".jpe",
+   "family": "draw",
+   "mediaType": "image/jpeg",
+   "importFilter": "draw_jpg_Import",
+   "targets": [
+    "pdf",
+    "svg",
+    "emf",
+    "wmf",
+    "eps",
+    "bmp",
+    "gif",
+    "tiff",
+    "webp",
+    "avif",
+    "ico",
+    "png-image",
+    "jpg-image",
+    "jxl",
+    "jp2",
+    "qoi",
+    "tga",
+    "pcx",
+    "apng",
+    "heic",
+    "heif"
+   ]
+  },
+  ".jfif": {
+   "extension": ".jfif",
+   "family": "draw",
+   "mediaType": "image/jpeg",
+   "importFilter": "draw_jpg_Import",
+   "targets": [
+    "pdf",
+    "svg",
+    "emf",
+    "wmf",
+    "eps",
+    "bmp",
+    "gif",
+    "tiff",
+    "webp",
+    "avif",
+    "ico",
+    "png-image",
+    "jpg-image",
+    "jxl",
+    "jp2",
+    "qoi",
+    "tga",
+    "pcx",
+    "apng",
+    "heic",
+    "heif"
+   ]
+  },
+  ".psd": {
+   "extension": ".psd",
+   "mediaType": "image/vnd.adobe.photoshop",
+   "targets": [
+    "layers"
+   ]
+  },
+  ".pdf": {
+   "extension": ".pdf",
+   "family": "draw",
+   "mediaType": "application/pdf",
+   "importFilter": "draw_pdf_Import",
+   "targets": [
+    "pdfa",
+    "png",
+    "jpg",
+    "svg",
+    "emf",
+    "wmf",
+    "eps",
+    "docx",
+    "pptx",
+    "xlsx",
+    "markdown"
+   ]
+  },
+  ".md": {
+   "extension": ".md",
+   "mediaType": "text/markdown",
+   "targets": [
+    "pdf",
+    "docx",
+    "html",
+    "odt",
+    "rtf",
+    "txt"
+   ]
+  },
+  ".rst": {
+   "extension": ".rst",
+   "mediaType": "text/x-rst",
+   "targets": [
+    "docx",
+    "html",
+    "odt",
+    "rtf",
+    "txt",
+    "markdown"
+   ]
+  },
+  ".tex": {
+   "extension": ".tex",
+   "mediaType": "application/x-tex",
+   "targets": [
+    "docx",
+    "html",
+    "odt",
+    "rtf",
+    "txt",
+    "markdown"
+   ]
+  },
+  ".textile": {
+   "extension": ".textile",
+   "mediaType": "text/x-textile",
+   "targets": [
+    "docx",
+    "html",
+    "odt",
+    "rtf",
+    "txt",
+    "markdown"
+   ]
+  },
+  ".org": {
+   "extension": ".org",
+   "mediaType": "text/org",
+   "targets": [
+    "docx",
+    "html",
+    "odt",
+    "rtf",
+    "txt",
+    "markdown"
+   ]
+  },
+  ".opml": {
+   "extension": ".opml",
+   "mediaType": "text/x-opml",
+   "targets": [
+    "docx",
+    "html",
+    "odt",
+    "rtf",
+    "txt",
+    "markdown"
+   ]
+  },
+  ".muse": {
+   "extension": ".muse",
+   "mediaType": "text/x-muse",
+   "targets": [
+    "docx",
+    "html",
+    "odt",
+    "rtf",
+    "txt",
+    "markdown"
+   ]
+  },
+  ".ipynb": {
+   "extension": ".ipynb",
+   "mediaType": "application/x-ipynb+json",
+   "targets": [
+    "docx",
+    "html",
+    "odt",
+    "rtf",
+    "txt",
+    "markdown"
+   ]
+  },
+  ".zip": {
+   "extension": ".zip",
+   "mediaType": "application/zip",
+   "targets": [
+    "tar",
+    "tar.gz",
+    "tar.bz2",
+    "tar.zst",
+    "7z",
+    "cbz"
+   ]
+  },
+  ".tar": {
+   "extension": ".tar",
+   "mediaType": "application/x-tar",
+   "targets": [
+    "zip",
+    "tar.gz",
+    "tar.bz2",
+    "tar.zst",
+    "7z",
+    "cbz"
+   ]
+  },
+  ".tgz": {
+   "extension": ".tgz",
+   "mediaType": "application/gzip",
+   "targets": [
+    "zip",
+    "tar",
+    "tar.bz2",
+    "tar.zst",
+    "7z",
+    "cbz"
+   ]
+  },
+  ".tbz2": {
+   "extension": ".tbz2",
+   "mediaType": "application/x-bzip2",
+   "targets": [
+    "zip",
+    "tar",
+    "tar.gz",
+    "tar.zst",
+    "7z",
+    "cbz"
+   ]
+  },
+  ".txz": {
+   "extension": ".txz",
+   "mediaType": "application/x-xz",
+   "targets": [
+    "zip",
+    "tar",
+    "tar.gz",
+    "tar.bz2",
+    "tar.zst",
+    "7z",
+    "cbz"
+   ]
+  },
+  ".gz": {
+   "extension": ".gz",
+   "mediaType": "application/gzip",
+   "targets": [
+    "zip",
+    "tar",
+    "tar.gz",
+    "tar.bz2",
+    "tar.zst",
+    "7z",
+    "cbz"
+   ]
+  },
+  ".bz2": {
+   "extension": ".bz2",
+   "mediaType": "application/x-bzip2",
+   "targets": [
+    "zip",
+    "tar",
+    "tar.gz",
+    "tar.bz2",
+    "tar.zst",
+    "7z",
+    "cbz"
+   ]
+  },
+  ".xz": {
+   "extension": ".xz",
+   "mediaType": "application/x-xz",
+   "targets": [
+    "zip",
+    "tar",
+    "tar.gz",
+    "tar.bz2",
+    "tar.zst",
+    "7z",
+    "cbz"
+   ]
+  },
+  ".zst": {
+   "extension": ".zst",
+   "mediaType": "application/zstd",
+   "targets": [
+    "zip",
+    "tar",
+    "tar.gz",
+    "tar.bz2",
+    "7z",
+    "cbz"
+   ]
+  },
+  ".7z": {
+   "extension": ".7z",
+   "mediaType": "application/x-7z-compressed",
+   "targets": [
+    "zip",
+    "tar",
+    "tar.gz",
+    "tar.bz2",
+    "tar.zst",
+    "cbz"
+   ]
+  },
+  ".rar": {
+   "extension": ".rar",
+   "mediaType": "application/vnd.rar",
+   "targets": [
+    "zip",
+    "tar",
+    "tar.gz",
+    "tar.bz2",
+    "tar.zst",
+    "7z",
+    "cbz"
+   ]
+  },
+  ".iso": {
+   "extension": ".iso",
+   "mediaType": "application/x-iso9660-image",
+   "targets": [
+    "zip",
+    "tar",
+    "tar.gz",
+    "tar.bz2",
+    "tar.zst",
+    "7z",
+    "cbz"
+   ]
+  },
+  ".cbz": {
+   "extension": ".cbz",
+   "mediaType": "application/vnd.comicbook+zip",
+   "targets": [
+    "zip",
+    "tar",
+    "tar.gz",
+    "tar.bz2",
+    "tar.zst",
+    "7z"
+   ]
+  },
+  ".bmp": {
+   "extension": ".bmp",
+   "mediaType": "image/bmp",
+   "targets": [
+    "gif",
+    "tiff",
+    "webp",
+    "avif",
+    "ico",
+    "png-image",
+    "jpg-image",
+    "jxl",
+    "jp2",
+    "qoi",
+    "tga",
+    "pcx",
+    "apng",
+    "heic",
+    "heif"
+   ]
+  },
+  ".gif": {
+   "extension": ".gif",
+   "mediaType": "image/gif",
+   "targets": [
+    "bmp",
+    "tiff",
+    "webp",
+    "avif",
+    "ico",
+    "png-image",
+    "jpg-image",
+    "jxl",
+    "jp2",
+    "qoi",
+    "tga",
+    "pcx",
+    "apng",
+    "heic",
+    "heif"
+   ]
+  },
+  ".tiff": {
+   "extension": ".tiff",
+   "mediaType": "image/tiff",
+   "targets": [
+    "bmp",
+    "gif",
+    "webp",
+    "avif",
+    "ico",
+    "png-image",
+    "jpg-image",
+    "jxl",
+    "jp2",
+    "qoi",
+    "tga",
+    "pcx",
+    "apng",
+    "heic",
+    "heif"
+   ]
+  },
+  ".tif": {
+   "extension": ".tif",
+   "mediaType": "image/tiff",
+   "targets": [
+    "bmp",
+    "gif",
+    "tiff",
+    "webp",
+    "avif",
+    "ico",
+    "png-image",
+    "jpg-image",
+    "jxl",
+    "jp2",
+    "qoi",
+    "tga",
+    "pcx",
+    "apng",
+    "heic",
+    "heif"
+   ]
+  },
+  ".webp": {
+   "extension": ".webp",
+   "mediaType": "image/webp",
+   "targets": [
+    "bmp",
+    "gif",
+    "tiff",
+    "avif",
+    "ico",
+    "png-image",
+    "jpg-image",
+    "jxl",
+    "jp2",
+    "qoi",
+    "tga",
+    "pcx",
+    "apng",
+    "heic",
+    "heif"
+   ]
+  },
+  ".avif": {
+   "extension": ".avif",
+   "mediaType": "image/avif",
+   "targets": [
+    "bmp",
+    "gif",
+    "tiff",
+    "webp",
+    "ico",
+    "png-image",
+    "jpg-image",
+    "jxl",
+    "jp2",
+    "qoi",
+    "tga",
+    "pcx",
+    "apng",
+    "heic",
+    "heif"
+   ]
+  },
+  ".ico": {
+   "extension": ".ico",
+   "mediaType": "image/x-icon",
+   "targets": [
+    "bmp",
+    "gif",
+    "tiff",
+    "webp",
+    "avif",
+    "png-image",
+    "jpg-image",
+    "jxl",
+    "jp2",
+    "qoi",
+    "tga",
+    "pcx",
+    "apng",
+    "heic",
+    "heif"
+   ]
+  },
+  ".jxl": {
+   "extension": ".jxl",
+   "mediaType": "image/jxl",
+   "targets": [
+    "bmp",
+    "gif",
+    "tiff",
+    "webp",
+    "avif",
+    "ico",
+    "png-image",
+    "jpg-image",
+    "jp2",
+    "qoi",
+    "tga",
+    "pcx",
+    "apng",
+    "heic",
+    "heif"
+   ]
+  },
+  ".jp2": {
+   "extension": ".jp2",
+   "mediaType": "image/jp2",
+   "targets": [
+    "bmp",
+    "gif",
+    "tiff",
+    "webp",
+    "avif",
+    "ico",
+    "png-image",
+    "jpg-image",
+    "jxl",
+    "qoi",
+    "tga",
+    "pcx",
+    "apng",
+    "heic",
+    "heif"
+   ]
+  },
+  ".qoi": {
+   "extension": ".qoi",
+   "mediaType": "image/qoi",
+   "targets": [
+    "bmp",
+    "gif",
+    "tiff",
+    "webp",
+    "avif",
+    "ico",
+    "png-image",
+    "jpg-image",
+    "jxl",
+    "jp2",
+    "tga",
+    "pcx",
+    "apng",
+    "heic",
+    "heif"
+   ]
+  },
+  ".tga": {
+   "extension": ".tga",
+   "mediaType": "image/x-tga",
+   "targets": [
+    "bmp",
+    "gif",
+    "tiff",
+    "webp",
+    "avif",
+    "ico",
+    "png-image",
+    "jpg-image",
+    "jxl",
+    "jp2",
+    "qoi",
+    "pcx",
+    "apng",
+    "heic",
+    "heif"
+   ]
+  },
+  ".pcx": {
+   "extension": ".pcx",
+   "mediaType": "image/x-pcx",
+   "targets": [
+    "bmp",
+    "gif",
+    "tiff",
+    "webp",
+    "avif",
+    "ico",
+    "png-image",
+    "jpg-image",
+    "jxl",
+    "jp2",
+    "qoi",
+    "tga",
+    "apng",
+    "heic",
+    "heif"
+   ]
+  },
+  ".apng": {
+   "extension": ".apng",
+   "mediaType": "image/apng",
+   "targets": [
+    "bmp",
+    "gif",
+    "tiff",
+    "webp",
+    "avif",
+    "ico",
+    "png-image",
+    "jpg-image",
+    "jxl",
+    "jp2",
+    "qoi",
+    "tga",
+    "pcx",
+    "heic",
+    "heif"
+   ]
+  },
+  ".srt": {
+   "extension": ".srt",
+   "mediaType": "application/x-subrip",
+   "targets": [
+    "vtt",
+    "ass",
+    "ssa"
+   ]
+  },
+  ".vtt": {
+   "extension": ".vtt",
+   "mediaType": "text/vtt",
+   "targets": [
+    "srt",
+    "ass",
+    "ssa"
+   ]
+  },
+  ".ass": {
+   "extension": ".ass",
+   "mediaType": "text/x-ass",
+   "targets": [
+    "srt",
+    "vtt",
+    "ssa"
+   ]
+  },
+  ".ssa": {
+   "extension": ".ssa",
+   "mediaType": "text/x-ssa",
+   "targets": [
+    "srt",
+    "vtt",
+    "ass"
+   ]
+  },
+  ".tsv": {
+   "extension": ".tsv",
+   "mediaType": "text/tab-separated-values",
+   "targets": [
+    "csv",
+    "json",
+    "yaml",
+    "jsonl",
+    "xml",
+    "toml",
+    "ini",
+    "sqlite",
+    "parquet",
+    "orc",
+    "feather"
+   ]
+  },
+  ".json": {
+   "extension": ".json",
+   "mediaType": "application/json",
+   "targets": [
+    "csv",
+    "tsv",
+    "yaml",
+    "jsonl",
+    "xml",
+    "toml",
+    "ini",
+    "sqlite",
+    "parquet",
+    "orc",
+    "feather"
+   ]
+  },
+  ".yaml": {
+   "extension": ".yaml",
+   "mediaType": "application/yaml",
+   "targets": [
+    "csv",
+    "tsv",
+    "json",
+    "jsonl",
+    "xml",
+    "toml",
+    "ini",
+    "sqlite",
+    "parquet",
+    "orc",
+    "feather"
+   ]
+  },
+  ".yml": {
+   "extension": ".yml",
+   "mediaType": "application/yaml",
+   "targets": [
+    "csv",
+    "tsv",
+    "json",
+    "jsonl",
+    "xml",
+    "toml",
+    "ini",
+    "sqlite",
+    "parquet",
+    "orc",
+    "feather"
+   ]
+  },
+  ".jsonl": {
+   "extension": ".jsonl",
+   "mediaType": "application/jsonl",
+   "targets": [
+    "csv",
+    "tsv",
+    "json",
+    "yaml",
+    "xml",
+    "toml",
+    "ini",
+    "sqlite",
+    "parquet",
+    "orc",
+    "feather"
+   ]
+  },
+  ".xml": {
+   "extension": ".xml",
+   "mediaType": "application/xml",
+   "targets": [
+    "csv",
+    "tsv",
+    "json",
+    "yaml",
+    "jsonl",
+    "toml",
+    "ini",
+    "sqlite",
+    "parquet",
+    "orc",
+    "feather"
+   ]
+  },
+  ".toml": {
+   "extension": ".toml",
+   "mediaType": "application/toml",
+   "targets": [
+    "csv",
+    "tsv",
+    "json",
+    "yaml",
+    "jsonl",
+    "xml",
+    "ini",
+    "sqlite",
+    "parquet",
+    "orc",
+    "feather"
+   ]
+  },
+  ".ini": {
+   "extension": ".ini",
+   "mediaType": "text/plain",
+   "targets": [
+    "csv",
+    "tsv",
+    "json",
+    "yaml",
+    "jsonl",
+    "xml",
+    "toml",
+    "sqlite",
+    "parquet",
+    "orc",
+    "feather"
+   ]
+  },
+  ".sqlite": {
+   "extension": ".sqlite",
+   "mediaType": "application/vnd.sqlite3",
+   "targets": [
+    "csv",
+    "tsv",
+    "json",
+    "yaml",
+    "jsonl",
+    "xml",
+    "toml",
+    "ini",
+    "parquet",
+    "orc",
+    "feather"
+   ]
+  },
+  ".svg": {
+   "extension": ".svg",
+   "family": "draw",
+   "mediaType": "image/svg+xml",
+   "importFilter": "draw_svg_Import",
+   "targets": [
+    "pdf",
+    "emf",
+    "wmf",
+    "eps",
+    "bmp",
+    "gif",
+    "tiff",
+    "webp",
+    "avif",
+    "ico",
+    "png-image",
+    "jpg-image",
+    "jxl",
+    "jp2",
+    "qoi",
+    "tga",
+    "pcx",
+    "apng",
+    "heic",
+    "heif"
+   ]
+  },
+  ".emf": {
+   "extension": ".emf",
+   "family": "draw",
+   "mediaType": "image/emf",
+   "importFilter": "draw_emf_Import",
+   "targets": [
+    "pdf",
+    "svg",
+    "wmf",
+    "eps"
+   ]
+  },
+  ".wmf": {
+   "extension": ".wmf",
+   "family": "draw",
+   "mediaType": "image/wmf",
+   "importFilter": "draw_wmf_Import",
+   "targets": [
+    "pdf",
+    "svg",
+    "emf",
+    "eps"
+   ]
+  },
+  ".eps": {
+   "extension": ".eps",
+   "family": "draw",
+   "mediaType": "application/postscript",
+   "importFilter": "draw_eps_Import",
+   "targets": [
+    "pdf",
+    "svg",
+    "emf",
+    "wmf"
+   ]
+  },
+  ".heic": {
+   "extension": ".heic",
+   "mediaType": "image/heic",
+   "targets": [
+    "bmp",
+    "gif",
+    "tiff",
+    "webp",
+    "avif",
+    "ico",
+    "png-image",
+    "jpg-image",
+    "jxl",
+    "jp2",
+    "qoi",
+    "tga",
+    "pcx",
+    "apng",
+    "heif"
+   ]
+  },
+  ".heif": {
+   "extension": ".heif",
+   "mediaType": "image/heif",
+   "targets": [
+    "bmp",
+    "gif",
+    "tiff",
+    "webp",
+    "avif",
+    "ico",
+    "png-image",
+    "jpg-image",
+    "jxl",
+    "jp2",
+    "qoi",
+    "tga",
+    "pcx",
+    "apng",
+    "heic"
+   ]
+  },
+  ".obj": {
+   "extension": ".obj",
+   "mediaType": "model/obj",
+   "targets": [
+    "stl",
+    "ply",
+    "glb",
+    "3mf"
+   ]
+  },
+  ".stl": {
+   "extension": ".stl",
+   "mediaType": "model/stl",
+   "targets": [
+    "obj",
+    "ply",
+    "glb",
+    "3mf"
+   ]
+  },
+  ".ply": {
+   "extension": ".ply",
+   "mediaType": "model/ply",
+   "targets": [
+    "obj",
+    "stl",
+    "glb",
+    "3mf"
+   ]
+  },
+  ".glb": {
+   "extension": ".glb",
+   "mediaType": "model/gltf-binary",
+   "targets": [
+    "obj",
+    "stl",
+    "ply",
+    "3mf"
+   ]
+  },
+  ".3mf": {
+   "extension": ".3mf",
+   "mediaType": "model/3mf",
+   "targets": [
+    "obj",
+    "stl",
+    "ply",
+    "glb"
+   ]
+  },
+  ".off": {
+   "extension": ".off",
+   "mediaType": "model/vnd.off",
+   "targets": [
+    "obj",
+    "stl",
+    "ply",
+    "glb",
+    "3mf"
+   ]
+  },
+  ".epub": {
+   "extension": ".epub",
+   "mediaType": "application/epub+zip",
+   "targets": [
+    "mobi",
+    "azw3",
+    "fb2",
+    "lrf",
+    "pdb",
+    "snb",
+    "kepub"
+   ]
+  },
+  ".mobi": {
+   "extension": ".mobi",
+   "mediaType": "application/x-mobipocket-ebook",
+   "targets": [
+    "epub",
+    "azw3",
+    "fb2",
+    "lrf",
+    "pdb",
+    "snb",
+    "kepub"
+   ]
+  },
+  ".azw3": {
+   "extension": ".azw3",
+   "mediaType": "application/vnd.amazon.mobi8-ebook",
+   "targets": [
+    "epub",
+    "mobi",
+    "fb2",
+    "lrf",
+    "pdb",
+    "snb",
+    "kepub"
+   ]
+  },
+  ".fb2": {
+   "extension": ".fb2",
+   "mediaType": "application/x-fictionbook+xml",
+   "targets": [
+    "epub",
+    "mobi",
+    "azw3",
+    "lrf",
+    "pdb",
+    "snb",
+    "kepub"
+   ]
+  },
+  ".lrf": {
+   "extension": ".lrf",
+   "mediaType": "application/x-sony-bbeb",
+   "targets": [
+    "epub",
+    "mobi",
+    "azw3",
+    "fb2",
+    "pdb",
+    "snb",
+    "kepub"
+   ]
+  },
+  ".pdb": {
+   "extension": ".pdb",
+   "mediaType": "application/x-pilot",
+   "targets": [
+    "epub",
+    "mobi",
+    "azw3",
+    "fb2",
+    "lrf",
+    "snb",
+    "kepub"
+   ]
+  },
+  ".ttf": {
+   "extension": ".ttf",
+   "mediaType": "font/ttf",
+   "targets": [
+    "otf",
+    "woff",
+    "woff2"
+   ]
+  },
+  ".otf": {
+   "extension": ".otf",
+   "mediaType": "font/otf",
+   "targets": [
+    "ttf",
+    "woff",
+    "woff2"
+   ]
+  },
+  ".woff": {
+   "extension": ".woff",
+   "mediaType": "font/woff",
+   "targets": [
+    "ttf",
+    "otf",
+    "woff2"
+   ]
+  },
+  ".woff2": {
+   "extension": ".woff2",
+   "mediaType": "font/woff2",
+   "targets": [
+    "ttf",
+    "otf",
+    "woff"
+   ]
+  },
+  ".parquet": {
+   "extension": ".parquet",
+   "mediaType": "application/vnd.apache.parquet",
+   "targets": [
+    "csv",
+    "tsv",
+    "json",
+    "yaml",
+    "jsonl",
+    "xml",
+    "toml",
+    "ini",
+    "sqlite",
+    "orc",
+    "feather"
+   ]
+  },
+  ".orc": {
+   "extension": ".orc",
+   "mediaType": "application/x-orc",
+   "targets": [
+    "csv",
+    "tsv",
+    "json",
+    "yaml",
+    "jsonl",
+    "xml",
+    "toml",
+    "ini",
+    "sqlite",
+    "parquet",
+    "feather"
+   ]
+  },
+  ".feather": {
+   "extension": ".feather",
+   "mediaType": "application/vnd.apache.arrow.file",
+   "targets": [
+    "csv",
+    "tsv",
+    "json",
+    "yaml",
+    "jsonl",
+    "xml",
+    "toml",
+    "ini",
+    "sqlite",
+    "parquet",
+    "orc"
+   ]
+  },
+  ".eml": {
+   "extension": ".eml",
+   "mediaType": "message/rfc822",
+   "targets": [
+    "txt",
+    "html"
+   ]
+  }
+ },
+ "media": {
+  "mp3": {
+   "extension": ".mp3",
+   "id": "mp3",
+   "kind": "audio",
+   "mediaType": "audio/mpeg",
+   "label": "MP3"
+  },
+  "wav": {
+   "extension": ".wav",
+   "id": "wav",
+   "kind": "audio",
+   "mediaType": "audio/wav",
+   "label": "WAV"
+  },
+  "flac": {
+   "extension": ".flac",
+   "id": "flac",
+   "kind": "audio",
+   "mediaType": "audio/flac",
+   "label": "FLAC"
+  },
+  "ogg": {
+   "extension": ".ogg",
+   "id": "ogg",
+   "kind": "audio",
+   "mediaType": "audio/ogg",
+   "label": "OGG"
+  },
+  "aac": {
+   "extension": ".aac",
+   "id": "aac",
+   "kind": "audio",
+   "mediaType": "audio/aac",
+   "label": "AAC"
+  },
+  "m4a": {
+   "extension": ".m4a",
+   "id": "m4a",
+   "kind": "audio",
+   "mediaType": "audio/mp4",
+   "label": "M4A"
+  },
+  "wma": {
+   "extension": ".wma",
+   "id": "wma",
+   "kind": "audio",
+   "mediaType": "audio/x-ms-wma",
+   "label": "WMA"
+  },
+  "opus": {
+   "extension": ".opus",
+   "id": "opus",
+   "kind": "audio",
+   "mediaType": "audio/opus",
+   "label": "OPUS"
+  },
+  "aiff": {
+   "extension": ".aiff",
+   "id": "aiff",
+   "kind": "audio",
+   "mediaType": "audio/aiff",
+   "label": "AIFF"
+  },
+  "m4b": {
+   "extension": ".m4b",
+   "id": "m4b",
+   "kind": "audio",
+   "mediaType": "audio/mp4",
+   "label": "M4B"
+  },
+  "ac3": {
+   "extension": ".ac3",
+   "id": "ac3",
+   "kind": "audio",
+   "mediaType": "audio/ac3",
+   "label": "AC3"
+  },
+  "au": {
+   "extension": ".au",
+   "id": "au",
+   "kind": "audio",
+   "mediaType": "audio/basic",
+   "label": "AU"
+  },
+  "caf": {
+   "extension": ".caf",
+   "id": "caf",
+   "kind": "audio",
+   "mediaType": "audio/x-caf",
+   "label": "CAF"
+  },
+  "oga": {
+   "extension": ".oga",
+   "id": "oga",
+   "kind": "audio",
+   "mediaType": "audio/ogg",
+   "label": "OGA"
+  },
+  "voc": {
+   "extension": ".voc",
+   "id": "voc",
+   "kind": "audio",
+   "mediaType": "audio/x-voc",
+   "label": "VOC"
+  },
+  "mp4": {
+   "extension": ".mp4",
+   "id": "mp4",
+   "kind": "video",
+   "mediaType": "video/mp4",
+   "label": "MP4"
+  },
+  "webm": {
+   "extension": ".webm",
+   "id": "webm",
+   "kind": "video",
+   "mediaType": "video/webm",
+   "label": "WEBM"
+  },
+  "mkv": {
+   "extension": ".mkv",
+   "id": "mkv",
+   "kind": "video",
+   "mediaType": "video/x-matroska",
+   "label": "MKV"
+  },
+  "avi": {
+   "extension": ".avi",
+   "id": "avi",
+   "kind": "video",
+   "mediaType": "video/x-msvideo",
+   "label": "AVI"
+  },
+  "mov": {
+   "extension": ".mov",
+   "id": "mov",
+   "kind": "video",
+   "mediaType": "video/quicktime",
+   "label": "MOV"
+  },
+  "flv": {
+   "extension": ".flv",
+   "id": "flv",
+   "kind": "video",
+   "mediaType": "video/x-flv",
+   "label": "FLV"
+  },
+  "asf": {
+   "extension": ".asf",
+   "id": "asf",
+   "kind": "video",
+   "mediaType": "video/x-ms-asf",
+   "label": "ASF"
+  },
+  "f4v": {
+   "extension": ".f4v",
+   "id": "f4v",
+   "kind": "video",
+   "mediaType": "video/mp4",
+   "label": "F4V"
+  },
+  "m4v": {
+   "extension": ".m4v",
+   "id": "m4v",
+   "kind": "video",
+   "mediaType": "video/x-m4v",
+   "label": "M4V"
+  },
+  "mpeg": {
+   "extension": ".mpeg",
+   "id": "mpeg",
+   "kind": "video",
+   "mediaType": "video/mpeg",
+   "label": "MPEG"
+  },
+  "ogv": {
+   "extension": ".ogv",
+   "id": "ogv",
+   "kind": "video",
+   "mediaType": "video/ogg",
+   "label": "OGV"
+  },
+  "ts": {
+   "extension": ".ts",
+   "id": "ts",
+   "kind": "video",
+   "mediaType": "video/mp2t",
+   "label": "TS"
+  },
+  "wmv": {
+   "extension": ".wmv",
+   "id": "wmv",
+   "kind": "video",
+   "mediaType": "video/x-ms-wmv",
+   "label": "WMV"
+  }
+ },
+ "markupExtensions": [
+  ".md",
+  ".rst",
+  ".tex",
+  ".textile",
+  ".org",
+  ".opml",
+  ".muse",
+  ".ipynb"
+ ],
+ "archiveExtensions": [
+  ".zip",
+  ".tar",
+  ".tgz",
+  ".tbz2",
+  ".txz",
+  ".gz",
+  ".bz2",
+  ".xz",
+  ".7z",
+  ".rar",
+  ".iso",
+  ".cbz"
+ ],
+ "arrowTargets": [
+  "parquet",
+  "orc",
+  "feather"
+ ],
+ "arrowExtensions": [
+  ".parquet",
+  ".orc",
+  ".feather"
+ ]
+}

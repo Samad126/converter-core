@@ -1,0 +1,14 @@
+//! Rust port of the converter backend. No HTTP: a library plus a CLI.
+pub mod config;
+pub mod convert;
+pub mod engines;
+pub mod error;
+pub mod formats;
+pub mod pipelines;
+pub mod process;
+pub mod queue;
+pub mod workspace;
+
+pub use error::{Error, ErrorCode, Result};
+pub use config::Config;
+pub use convert::{convert_file, ConvertOptions};

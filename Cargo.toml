@@ -1,0 +1,22 @@
+[package]
+name = "converter-core"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[lib]
+name = "converter_core"
+
+[[bin]]
+name = "converter"
+path = "src/bin/converter.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "process", "time", "sync", "fs", "io-util"] }
+clap = { version = "4", features = ["derive"] }
+dirs = "6"
+which = "8"
+zip = { version = "2", default-features = false, features = ["deflate"] }
