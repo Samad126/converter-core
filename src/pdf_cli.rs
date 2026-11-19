@@ -66,6 +66,18 @@ pub async fn run(cfg: &Config, op: &str, files: &[PathBuf], flag: &dyn Fn(&str) 
                 Some("high") => qpdf::CompressLevel::High, Some(_) => return Err(bad("--level must be low, medium or high")) };
             one("-compressed", qpdf::run(cfg, qpdf::Op::Compress(level), &data).await?).await
         }
+        "ocr" => one("-ocr", crate::pdf::python_ops::ocr(cfg, &data, flag("force").as_deref() == Some("true")).await?).await,
+        "redact" => {
+            let json = tokio::fs::read_to_string(need("areas")?).await?;
+            let areas: Vec<crate::pdf::python_ops::Area> = serde_json::from_str(&json).map_err(|e| bad(format!("The areas file is not valid: {e}")))?;
+            one("-redacted", crate::pdf::python_ops::redact(cfg, &data, &areas).await?).await
+        }
+        "compare" => {
+            if files.len() != 2 { return Err(bad("compare needs exactly two PDFs.")); }
+            let report = crate::pdf::python_ops::compare(cfg, &data, &read(&files[1]).await?).await?;
+            println!("{}", serde_json::to_string_pretty(&report).unwrap());
+            Ok(vec![])
+        }
         "watermark" => one("-watermarked", overlay::watermark(&data, &need("text")?, opt_sel("pages")?.as_deref())?).await,
         "page-numbers" => {
             let pos = match flag("position").as_deref() { None | Some("bottom-center") => overlay::NumberPosition::BottomCenter,

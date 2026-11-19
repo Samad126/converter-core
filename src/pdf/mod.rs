@@ -3,6 +3,7 @@
 pub mod draw;
 pub mod overlay;
 pub mod pages;
+pub mod python_ops;
 pub mod qpdf;
 pub mod ranges;
 mod widths;

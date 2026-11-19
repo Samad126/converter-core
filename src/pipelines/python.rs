@@ -66,3 +66,21 @@ mod tests {
     }
     #[test] fn scripts_found_in_dev_tree() { assert!(scripts_dir().join("pdf_engine.py").is_file()); }
 }
+
+/// Runs one of our scripts with the resolved Python, outside a conversion `Ctx`
+/// (used by the standalone PDF operations). Missing packages become `E_ENGINE_MISSING`.
+pub async fn run_script(cfg: &crate::Config, script: &str, args: Vec<String>, workspace: &Path, timeout: std::time::Duration) -> Result<process::Outcome> {
+    let py = crate::engines::resolve(crate::engines::tool("python").unwrap(), cfg, None).ok_or_else(|| Error::engine_missing("python"))?;
+    let mut full = vec![s(&scripts_dir().join(script))];
+    full.extend(args);
+    let home = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).unwrap_or_else(|_| s(workspace));
+    let o = process::run_env(&py, &full, workspace, timeout, &[("HOME", home)]).await?;
+    if o.code != Some(0) {
+        if let Some(e) = missing_module(&o.stderr) { return Err(e); }
+        let low = o.stderr.to_lowercase();
+        if low.contains("tesseract") && (low.contains("not found") || low.contains("no such file") || low.contains("tesseractnotfound")) {
+            return Err(Error::engine_missing("tesseract"));
+        }
+    }
+    Ok(o)
+}
