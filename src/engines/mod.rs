@@ -20,16 +20,16 @@ pub struct Tool {
 }
 
 pub const TOOLS: &[Tool] = &[
-    Tool { name: "libreoffice", used_for: "documents, spreadsheets, presentations", bins: &["soffice", "soffice.exe", "libreoffice"], version_args: &["--version"],
+    Tool { name: "libreoffice", used_for: "optional: highest-fidelity Office and legacy files", bins: &["soffice", "soffice.exe", "libreoffice"], version_args: &["--version"],
         hint_linux: "apt-get install -y libreoffice-writer libreoffice-calc libreoffice-impress libreoffice-draw",
         hint_macos: "brew install --cask libreoffice", hint_windows: "winget install --id TheDocumentFoundation.LibreOffice" },
-    Tool { name: "poppler", used_for: "rasterising pages to PNG/JPG", bins: &["pdftoppm", "pdftoppm.exe"], version_args: &["-v"],
+    Tool { name: "poppler", used_for: "optional: faster PDF page images", bins: &["pdftoppm", "pdftoppm.exe"], version_args: &["-v"],
         hint_linux: "apt-get install -y poppler-utils", hint_macos: "brew install poppler", hint_windows: "winget install --id oschwartz10612.Poppler" },
     Tool { name: "pandoc", used_for: "markup formats (md/rst/tex/org/...)", bins: &["pandoc", "pandoc.exe"], version_args: &["--version"],
         hint_linux: "apt-get install -y pandoc", hint_macos: "brew install pandoc", hint_windows: "winget install --id JohnMacFarlane.Pandoc" },
     Tool { name: "qpdf", used_for: "PDF protect/unlock/repair/compress", bins: &["qpdf", "qpdf.exe"], version_args: &["--version"],
         hint_linux: "apt-get install -y qpdf", hint_macos: "brew install qpdf", hint_windows: "winget install --id QPDF.QPDF" },
-    Tool { name: "7zip", used_for: "archives (zip/tar/7z/gz/bz2/xz/...)", bins: &["7zz", "7z", "7z.exe"], version_args: &[],
+    Tool { name: "7zip", used_for: "7z, bz2, zst and other archives", bins: &["7zz", "7z", "7z.exe"], version_args: &[],
         hint_linux: "apt-get install -y p7zip-full", hint_macos: "brew install sevenzip", hint_windows: "winget install --id 7zip.7zip" },
     Tool { name: "ffmpeg", used_for: "image fallback, audio and video", bins: &["ffmpeg", "ffmpeg.exe"], version_args: &["-version"],
         hint_linux: "apt-get install -y ffmpeg", hint_macos: "brew install ffmpeg", hint_windows: "winget install --id Gyan.FFmpeg" },
@@ -45,7 +45,7 @@ pub const TOOLS: &[Tool] = &[
         hint_linux: "apt-get install -y calibre", hint_macos: "brew install --cask calibre", hint_windows: "winget install --id calibre.calibre" },
     Tool { name: "tesseract", used_for: "OCR for scanned PDFs", bins: &["tesseract", "tesseract.exe"], version_args: &["--version"],
         hint_linux: "apt-get install -y tesseract-ocr", hint_macos: "brew install tesseract", hint_windows: "winget install --id UB-Mannheim.TesseractOCR" },
-    Tool { name: "python", used_for: "Python tools: PDF to Word/PowerPoint/Excel, Parquet/ORC, fonts, compare, redact", bins: &["python3", "python", "python.exe"], version_args: &["--version"],
+    Tool { name: "python", used_for: "optional: layout-faithful PDF to Word/Excel, Parquet/ORC, WOFF2, compare, redact", bins: &["python3", "python", "python.exe"], version_args: &["--version"],
         hint_linux: "apt-get install -y python3 python3-pip", hint_macos: "brew install python3", hint_windows: "winget install --id Python.Python.3.12" },
 ];
 

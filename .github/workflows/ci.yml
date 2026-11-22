@@ -14,6 +14,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+      # Optional engines the engine-dependent tests use when present (they skip quietly otherwise): assimp for the 3D
+      # formats, ffmpeg for the media containers, 7-Zip for .lzma/.zipx, poppler's pdftotext for the PDF text checks.
+      - name: Optional engines for the integration tests
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends assimp-utils ffmpeg p7zip-full poppler-utils
       - run: cargo build --all-targets
       - run: cargo test
 
