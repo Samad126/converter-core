@@ -133,3 +133,49 @@ async fn seven_zip_routes_for_lzma_and_zipx() {
         assert!(std::fs::metadata(&out[0]).unwrap().len() > 20, "{name}");
     }
 }
+
+/// Container formats added on top of the backend's list: each was checked with the zero-flag `ffmpeg -y -i in out`
+/// the media pipeline runs, both as target and as source. (.3gp/.amr/.mxf/.dv fail that default command and stay out.)
+#[tokio::test]
+async fn extra_media_containers_round_trip_through_ffmpeg() {
+    if !have("ffmpeg") { eprintln!("SKIP: ffmpeg not installed"); return; }
+    use converter_core::media::convert_media;
+    let ff = engines::resolve(engines::tool("ffmpeg").unwrap(), &cfg(), None).unwrap();
+    let d = tmp("media");
+    let run = |args: &[&str]| assert!(std::process::Command::new(&ff).args(["-y", "-loglevel", "error"]).args(args).stdout(std::process::Stdio::null()).status().unwrap().success());
+    run(&["-f", "lavfi", "-i", "sine=frequency=440:duration=1", "-ar", "44100", d.join("src.wav").to_str().unwrap()]);
+    run(&["-f", "lavfi", "-i", "testsrc=duration=1:size=160x120:rate=15", "-f", "lavfi", "-i", "sine=duration=1", "-shortest", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", d.join("src.mp4").to_str().unwrap()]);
+    let progress: converter_core::progress::ProgressFn = std::sync::Arc::new(|_| {});
+    for (src, targets, back) in [("src.wav", ["mka", "mp2", "wv", "tta"], "wav"), ("src.mp4", ["mts", "m2ts", "vob", "mkv"], "mp4")] {
+        for t in targets {
+            let out = convert_media(&cfg(), &d.join(src), t, ConvertOptions { out_dir: Some(d.join("o")), ..Default::default() }, progress.clone()).await.unwrap_or_else(|e| panic!("{src} -> {t}: {e:?}"));
+            assert!(std::fs::metadata(&out).unwrap().len() > 1000, "{src} -> {t}");
+            let again = convert_media(&cfg(), &out, back, ConvertOptions { out_dir: Some(d.join("o2")), ..Default::default() }, progress.clone()).await.unwrap_or_else(|e| panic!(".{t} -> {back}: {e:?}"));
+            assert!(std::fs::metadata(&again).unwrap().len() > 1000, ".{t} -> {back}");
+        }
+    }
+}
+
+/// 3D formats added on top of the backend's list, run through the real assimp (obj/dae/fbx/3ds/x3d/dxf).
+#[tokio::test]
+async fn extra_3d_formats_round_trip_through_assimp() {
+    if !have("assimp") { eprintln!("SKIP: assimp not installed"); return; }
+    let d = tmp("3d");
+    let cube = "o cube\nv 0 0 0\nv 1 0 0\nv 1 1 0\nv 0 1 0\nv 0 0 1\nv 1 0 1\nv 1 1 1\nv 0 1 1\nf 1 2 3 4\nf 5 8 7 6\nf 1 5 6 2\nf 2 6 7 3\nf 3 7 8 4\nf 4 8 5 1\n";
+    std::fs::write(d.join("cube.obj"), cube).unwrap();
+    let mut made = vec![];
+    for t in ["dae", "fbx", "3ds", "x3d"] {
+        let out = convert_file(&cfg(), &d.join("cube.obj"), t, ConvertOptions { out_dir: Some(d.join("o")), ..Default::default() }).await.unwrap_or_else(|e| panic!("obj -> {t}: {e:?}"));
+        assert!(std::fs::metadata(&out[0]).unwrap().len() > 100, "obj -> {t}");
+        made.push((t, out[0].clone()));
+    }
+    // And back: every new format is also a source.
+    for (t, path) in made {
+        let back = convert_file(&cfg(), &path, "stl", ConvertOptions { out_dir: Some(d.join("o2")), ..Default::default() }).await.unwrap_or_else(|e| panic!(".{t} -> stl: {e:?}"));
+        let stl = std::fs::read(&back[0]).unwrap();
+        assert!(stl.len() > 200, ".{t} -> stl is a real mesh ({} bytes)", stl.len());
+    }
+    std::fs::write(d.join("tri.dxf"), "0\nSECTION\n2\nENTITIES\n0\n3DFACE\n8\n0\n10\n0.0\n20\n0.0\n30\n0.0\n11\n1.0\n21\n0.0\n31\n0.0\n12\n1.0\n22\n1.0\n32\n0.0\n13\n0.0\n23\n1.0\n33\n0.0\n0\nENDSEC\n0\nEOF\n").unwrap();
+    let out = convert_file(&cfg(), &d.join("tri.dxf"), "obj", ConvertOptions { out_dir: Some(d.join("o3")), ..Default::default() }).await.unwrap_or_else(|e| panic!("dxf -> obj: {e:?}"));
+    assert!(std::fs::read_to_string(&out[0]).unwrap().contains("\nf "), "the DXF face became an OBJ face");
+}

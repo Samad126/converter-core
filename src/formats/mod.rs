@@ -52,6 +52,9 @@ pub struct MediaFormat {
 
 #[derive(Debug, Deserialize)]
 struct Raw {
+    /// Overlay only: engine-routed targets appended to existing sources.
+    #[serde(rename = "addTargets", default)]
+    add_targets: BTreeMap<String, Vec<String>>,
     targets: BTreeMap<String, TargetFormat>,
     sources: BTreeMap<String, SourceFormat>,
     media: BTreeMap<String, MediaFormat>,
@@ -92,6 +95,9 @@ pub fn matrix() -> &'static Matrix {
         // Formats only the built-in converters handle (see data/formats-extra.json): every pair they list is native-only.
         let extra: Raw = serde_json::from_str(include_str!("../../data/formats-extra.json")).expect("data/formats-extra.json is valid");
         m.targets.extend(extra.targets);
+        for (ext, ts) in extra.add_targets {
+            if let Some(src) = m.sources.get_mut(&ext) { for t in ts { if !src.targets.contains(&t) && m.targets.contains_key(&t) { src.targets.push(t); } } }
+        }
         m.media.extend(extra.media);
         for (ext, src) in extra.sources {
             // A source without a document family has no engine route: every pair it lists is built-in only.
@@ -185,9 +191,9 @@ mod tests {
     #[test]
     fn matrix_loads_with_expected_sizes() {
         let m = matrix();
-        assert_eq!(m.targets.len(), 79);
-        assert_eq!(m.sources.len(), 155);
-        assert_eq!(m.media.len(), 28);
+        assert_eq!(m.targets.len(), 83);
+        assert_eq!(m.sources.len(), 160);
+        assert_eq!(m.media.len(), 35);
     }
 
     #[test]

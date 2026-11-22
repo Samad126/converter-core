@@ -23,6 +23,38 @@
       "label": "LRC",
       "mode": "transcode",
       "multiple": false
+    },
+    "dae": {
+      "id": "dae",
+      "extension": ".dae",
+      "mediaType": "model/vnd.collada+xml",
+      "label": "COLLADA",
+      "mode": "3d",
+      "multiple": false
+    },
+    "fbx": {
+      "id": "fbx",
+      "extension": ".fbx",
+      "mediaType": "application/octet-stream",
+      "label": "FBX",
+      "mode": "3d",
+      "multiple": false
+    },
+    "3ds": {
+      "id": "3ds",
+      "extension": ".3ds",
+      "mediaType": "application/x-3ds",
+      "label": "3DS",
+      "mode": "3d",
+      "multiple": false
+    },
+    "x3d": {
+      "id": "x3d",
+      "extension": ".x3d",
+      "mediaType": "model/x3d+xml",
+      "label": "X3D",
+      "mode": "3d",
+      "multiple": false
     }
   },
   "sources": {
@@ -753,7 +785,171 @@
         "tga",
         "pdf"
       ]
+    },
+    ".dae": {
+      "extension": ".dae",
+      "mediaType": "model/vnd.collada+xml",
+      "viaEngine": true,
+      "targets": [
+        "obj",
+        "stl",
+        "ply",
+        "glb",
+        "3mf",
+        "fbx",
+        "3ds",
+        "x3d"
+      ]
+    },
+    ".fbx": {
+      "extension": ".fbx",
+      "mediaType": "application/octet-stream",
+      "viaEngine": true,
+      "targets": [
+        "obj",
+        "stl",
+        "ply",
+        "glb",
+        "3mf",
+        "dae",
+        "3ds",
+        "x3d"
+      ]
+    },
+    ".3ds": {
+      "extension": ".3ds",
+      "mediaType": "application/x-3ds",
+      "viaEngine": true,
+      "targets": [
+        "obj",
+        "stl",
+        "ply",
+        "glb",
+        "3mf",
+        "dae",
+        "fbx",
+        "x3d"
+      ]
+    },
+    ".x3d": {
+      "extension": ".x3d",
+      "mediaType": "model/x3d+xml",
+      "viaEngine": true,
+      "targets": [
+        "obj",
+        "stl",
+        "ply",
+        "glb",
+        "3mf",
+        "dae",
+        "fbx",
+        "3ds"
+      ]
+    },
+    ".dxf": {
+      "extension": ".dxf",
+      "mediaType": "image/vnd.dxf",
+      "viaEngine": true,
+      "targets": [
+        "obj",
+        "stl",
+        "ply",
+        "glb",
+        "3mf",
+        "dae",
+        "fbx",
+        "3ds",
+        "x3d"
+      ]
     }
   },
-  "media": {}
+  "media": {
+    "mka": {
+      "extension": ".mka",
+      "id": "mka",
+      "kind": "audio",
+      "mediaType": "audio/x-matroska",
+      "label": "MKA"
+    },
+    "mp2": {
+      "extension": ".mp2",
+      "id": "mp2",
+      "kind": "audio",
+      "mediaType": "audio/mpeg",
+      "label": "MP2"
+    },
+    "wv": {
+      "extension": ".wv",
+      "id": "wv",
+      "kind": "audio",
+      "mediaType": "audio/x-wavpack",
+      "label": "WavPack"
+    },
+    "tta": {
+      "extension": ".tta",
+      "id": "tta",
+      "kind": "audio",
+      "mediaType": "audio/x-tta",
+      "label": "TTA"
+    },
+    "mts": {
+      "extension": ".mts",
+      "id": "mts",
+      "kind": "video",
+      "mediaType": "video/mp2t",
+      "label": "MTS"
+    },
+    "m2ts": {
+      "extension": ".m2ts",
+      "id": "m2ts",
+      "kind": "video",
+      "mediaType": "video/mp2t",
+      "label": "M2TS"
+    },
+    "vob": {
+      "extension": ".vob",
+      "id": "vob",
+      "kind": "video",
+      "mediaType": "video/x-ms-vob",
+      "label": "VOB"
+    }
+  },
+  "addTargets": {
+    ".obj": [
+      "dae",
+      "fbx",
+      "3ds",
+      "x3d"
+    ],
+    ".stl": [
+      "dae",
+      "fbx",
+      "3ds",
+      "x3d"
+    ],
+    ".glb": [
+      "dae",
+      "fbx",
+      "3ds",
+      "x3d"
+    ],
+    ".3mf": [
+      "dae",
+      "fbx",
+      "3ds",
+      "x3d"
+    ],
+    ".off": [
+      "dae",
+      "fbx",
+      "3ds",
+      "x3d"
+    ],
+    ".ply": [
+      "dae",
+      "fbx",
+      "3ds",
+      "x3d"
+    ]
+  }
 }
