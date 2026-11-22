@@ -83,7 +83,7 @@ fn pdf_pages(p: &Path) -> Vec<(f32, f32)> {
 
 /// Text as `pdftotext` sees it (skipped quietly when poppler is not installed).
 fn pdf_text(p: &Path) -> Option<String> {
-    let out = std::process::Command::new("pdftotext").arg("-layout").arg(p).arg("-").output().ok()?;
+    let out = std::process::Command::new("pdftotext").args(["-enc", "UTF-8", "-layout"]).arg(p).arg("-").output().ok()?;
     out.status.success().then(|| String::from_utf8_lossy(&out.stdout).into_owned())
 }
 
