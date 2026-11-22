@@ -22,6 +22,7 @@ pub fn to_txt(doc: &Doc) -> String {
         let mut counters: Vec<(bool, u32)> = vec![];
         for b in bs {
             match b {
+                Block::Para(p) if p.is_blank() && p.list.is_none() => {}
                 Block::Para(p) => {
                     let text = p.text();
                     match &p.list {

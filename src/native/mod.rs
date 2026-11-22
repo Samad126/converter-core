@@ -17,14 +17,18 @@ use std::path::{Path, PathBuf};
 
 const WORD: &[&str] = &[".docx", ".docm", ".dotx"];
 const SLIDES: &[&str] = &[".pptx", ".pptm", ".ppsx", ".potx"];
+const HWP: &[&str] = &[".hwp"];
+const HWPX: &[&str] = &[".hwpx"];
 const SHEET: &[&str] = &[".xlsx", ".xlsm", ".xls", ".ods"];
 
 /// `(source extensions, target ids)` this module can convert. A source never lists itself as a target.
 const PAIRS: &[(&[&str], &[&str])] = &[
-    (WORD, &["txt", "html", "markdown", "epub", "pdf", "png", "jpg"]),
-    (SLIDES, &["pdf", "txt", "html", "markdown", "png", "jpg"]),
-    (&[".pdf"], &["png", "jpg", "tiff", "cbz", "pptx", "txt", "markdown", "html", "docx", "xlsx"]),
-    (SHEET, &["csv", "tsv", "json", "html", "xlsx", "ods", "pdf", "png", "jpg"]),
+    (WORD, &["txt", "html", "markdown", "epub", "pdf", "png", "jpg", "hwpx"]),
+    (SLIDES, &["pdf", "txt", "html", "markdown", "png", "jpg", "hwpx"]),
+    (&[".pdf"], &["png", "jpg", "tiff", "cbz", "pptx", "txt", "markdown", "html", "docx", "xlsx", "hwpx"]),
+    (SHEET, &["csv", "tsv", "json", "html", "xlsx", "ods", "pdf", "png", "jpg", "hwpx"]),
+    (HWP, &["pdf", "txt", "html", "markdown", "epub", "docx", "hwpx", "xlsx", "png", "jpg"]),
+    (HWPX, &["pdf", "txt", "html", "markdown", "epub", "docx", "xlsx", "png", "jpg"]),
 ];
 
 pub fn supports(ext: &str, target: &str) -> bool {
@@ -46,6 +50,14 @@ fn read(ctx: &Ctx<'_>, ext: &str) -> Result<Content> {
     if SLIDES.contains(&ext) {
         let f = std::fs::File::open(&ctx.input)?;
         return read::pptx::read(std::io::BufReader::new(f), ctx.cfg).map(Content::Deck);
+    }
+    if HWP.contains(&ext) {
+        let f = std::fs::File::open(&ctx.input)?;
+        return read::hwp::read(std::io::BufReader::new(f), ctx.cfg).map(Content::Doc);
+    }
+    if HWPX.contains(&ext) {
+        let f = std::fs::File::open(&ctx.input)?;
+        return read::hwpx::read(std::io::BufReader::new(f), ctx.cfg).map(Content::Doc);
     }
     if ext == ".pdf" { return read::pdf_text::read(std::fs::read(&ctx.input)?, ctx.cfg.max_raster_pages).map(Content::Doc); }
     if SHEET.contains(&ext) { return read::sheet::read(&ctx.input, ctx.cfg).map(Content::Book); }
@@ -115,6 +127,7 @@ fn write(content: Content, target: &str, out: &Path) -> Result<()> {
         "html" => std::fs::write(out, html::to_html(&content.into_doc(), "Document"))?,
         "pdf" => std::fs::write(out, pdf_bytes(content)?)?,
         "docx" => docx::write(&content.into_doc(), out)?,
+        "hwpx" => hwpx::write(&content.into_doc(), "Document", out)?,
         "epub" => epub::to_epub(&content.into_doc(), "Document", out)?,
         "csv" => sheet::delimited(&book_of(content)?, ',', out)?,
         "tsv" => sheet::delimited(&book_of(content)?, '\t', out)?,

@@ -1,0 +1,46 @@
+{
+  "targets": {
+    "hwpx": {
+      "id": "hwpx",
+      "extension": ".hwpx",
+      "mediaType": "application/hwp+zip",
+      "label": "HWPX",
+      "mode": "direct",
+      "multiple": false
+    }
+  },
+  "sources": {
+    ".hwp": {
+      "extension": ".hwp",
+      "mediaType": "application/x-hwp",
+      "targets": [
+        "pdf",
+        "txt",
+        "html",
+        "markdown",
+        "epub",
+        "docx",
+        "hwpx",
+        "xlsx",
+        "png",
+        "jpg"
+      ]
+    },
+    ".hwpx": {
+      "extension": ".hwpx",
+      "mediaType": "application/hwp+zip",
+      "targets": [
+        "pdf",
+        "txt",
+        "html",
+        "markdown",
+        "epub",
+        "docx",
+        "xlsx",
+        "png",
+        "jpg"
+      ]
+    }
+  },
+  "media": {}
+}

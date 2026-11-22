@@ -1,5 +1,7 @@
 //! Built-in readers: open a file's own bytes and produce the neutral model.
 pub mod docx;
+pub mod hwp;
+pub mod hwpx;
 pub mod pdf_text;
 pub mod pptx;
 pub mod sheet;
@@ -51,4 +53,42 @@ pub fn resolve_target(base_dir: &str, target: &str) -> String {
         match seg { "" | "." => {}, ".." => { parts.pop(); }, s => parts.push(s) }
     }
     parts.join("/")
+}
+
+/// Arranges cells given by address `(row, col, row_span, col_span, cell)` into rows of the model's table: positions
+/// covered by a cell that spans rows from above get an empty placeholder so columns stay aligned.
+pub fn grid_to_rows(mut cells: Vec<(usize, usize, usize, usize, crate::native::model::Cell)>) -> Vec<Vec<crate::native::model::Cell>> {
+    use crate::native::model::Cell;
+    cells.sort_by_key(|c| (c.0, c.1));
+    let n_rows = cells.iter().map(|c| c.0 + 1).max().unwrap_or(0).min(10_000);
+    let mut covered: std::collections::HashSet<(usize, usize)> = Default::default();
+    let mut rows: Vec<Vec<Cell>> = vec![vec![]; n_rows];
+    let mut next_col = vec![0usize; n_rows];
+    for (r, c, rs, cs, mut cell) in cells {
+        if r >= n_rows || c > 4096 { continue; }
+        // Fill any gap left by an overhead row span (or a missing cell) with empty cells.
+        while next_col[r] < c {
+            let col = next_col[r];
+            rows[r].push(Cell { blocks: vec![], col_span: 1 });
+            next_col[r] = col + 1;
+        }
+        cell.col_span = cs.max(1);
+        for dr in 1..rs.max(1) { for dc in 0..cs.max(1) { covered.insert((r + dr, c + dc)); } }
+        next_col[r] = c + cs.max(1);
+        rows[r].push(cell);
+    }
+    // Row spans: a spanned-over position in a lower row is an empty cell in the right place.
+    for r in 0..n_rows {
+        let mut placed: Vec<(usize, Cell)> = vec![];
+        let mut col = 0usize;
+        for cell in std::mem::take(&mut rows[r]) {
+            while covered.contains(&(r, col)) { placed.push((col, Cell { blocks: vec![], col_span: 1 })); col += 1; }
+            let span = cell.col_span.max(1);
+            placed.push((col, cell));
+            col += span;
+        }
+        while covered.contains(&(r, col)) { placed.push((col, Cell { blocks: vec![], col_span: 1 })); col += 1; }
+        rows[r] = placed.into_iter().map(|(_, c)| c).collect();
+    }
+    rows
 }

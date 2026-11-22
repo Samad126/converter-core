@@ -86,6 +86,14 @@ pub fn matrix() -> &'static Matrix {
         let raw: Raw = serde_json::from_str(include_str!("../../data/formats.json"))
             .expect("data/formats.json is valid");
         let mut m = Matrix { targets: raw.targets, sources: raw.sources, media: raw.media, native_only: Default::default() };
+        // Formats only the built-in converters handle (see data/formats-extra.json): every pair they list is native-only.
+        let extra: Raw = serde_json::from_str(include_str!("../../data/formats-extra.json")).expect("data/formats-extra.json is valid");
+        m.targets.extend(extra.targets);
+        m.media.extend(extra.media);
+        for (ext, src) in extra.sources {
+            for t in &src.targets { m.native_only.insert((ext.clone(), t.clone())); }
+            m.sources.insert(ext, src);
+        }
         for (ext, target) in crate::native::all_pairs() {
             let Some(src) = m.sources.get_mut(ext) else { continue };
             if !m.targets.contains_key(target) || src.targets.iter().any(|t| t == target) { continue; }
@@ -173,8 +181,8 @@ mod tests {
     #[test]
     fn matrix_loads_with_expected_sizes() {
         let m = matrix();
-        assert_eq!(m.targets.len(), 76);
-        assert_eq!(m.sources.len(), 104);
+        assert_eq!(m.targets.len(), 77);
+        assert_eq!(m.sources.len(), 106);
         assert_eq!(m.media.len(), 28);
     }
 

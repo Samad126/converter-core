@@ -274,3 +274,75 @@ async fn try_run_path(src: &Path, target: &str) -> converter_core::Result<Vec<Pa
     let err = native::read::pdf_text::read(pdf, 100).unwrap_err();
     assert!(err.message.contains("no selectable text") && err.message.contains("OCR"), "{}", err.message);
 }
+
+// ---- HWP / HWPX ----------------------------------------------------------------------------------------------
+
+fn words(s: &str) -> std::collections::BTreeMap<String, usize> {
+    let mut m = std::collections::BTreeMap::new();
+    for w in s.split(|c: char| !c.is_alphanumeric()).filter(|w| !w.is_empty()) { *m.entry(w.to_lowercase()).or_default() += 1; }
+    m
+}
+
+#[tokio::test] async fn hwp_text_matches_what_hancom_extracts() {
+    let ours = std::fs::read_to_string(run_path(&fixture("hwp-gov-plan.hwp"), "txt").await.remove(0)).unwrap();
+    let reference = std::fs::read_to_string(fixture("hwp-gov-plan.txt")).unwrap();
+    let (a, b) = (words(&ours), words(&reference));
+    let missing: usize = b.iter().map(|(w, n)| n.saturating_sub(*a.get(w).unwrap_or(&0))).sum();
+    // The reference is a hand-wrapped excerpt: a word broken across two lines ("표 / 준화") is the only difference.
+    assert!(missing <= 3, "{missing} reference words missing from our text");
+    assert!(ours.contains("2022년 국립국어원 업무계획") && ours.contains("한국어교육"));
+}
+
+#[tokio::test] async fn hwp_tables_keep_their_shape_including_row_spans() {
+    let xlsx = run_path(&fixture("hwp-stats.hwp"), "xlsx").await.remove(0);
+    let wb = native::read::sheet::read(&xlsx, &Config::default()).unwrap();
+    // Sheet 1 is the title box; the statistics table is the one with the account columns.
+    let rows = &wb.sheets.iter().find(|s| s.rows.iter().flatten().any(|c| c.contains("일반 회계"))).expect("the statistics table").rows;
+    assert!(rows[0].iter().any(|c| c.contains("일반 회계")), "{:?}", rows[0]);
+    let income = rows.iter().find(|r| r.iter().any(|c| c.contains("19,159"))).expect("the income row");
+    // Columns line up under the spanned first column: label, sub-label (blank in the parent row), then the figures.
+    assert_eq!(income.len(), rows[0].len());
+    assert!(rows.iter().any(|r| r.iter().any(|c| c.trim() == "경상수입") && r.iter().any(|c| c == "19,124")), "{rows:?}");
+    let calc = native::read::sheet::read(&run_path(&fixture("hwp-calc.hwp"), "xlsx").await.remove(0), &Config::default()).unwrap();
+    assert_eq!(calc.sheets[0].rows[..2], [vec!["1", "2", "3", "4"], vec!["3", "7", "2", "7"]]);
+}
+
+#[tokio::test] async fn hwpx_matches_hancoms_own_preview_text() {
+    let md = std::fs::read_to_string(run_path(&fixture("hwpx-cellzone.hwpx"), "markdown").await.remove(0)).unwrap();
+    for needle in ["가나다라 바사아 차카타파 가나 라마", "| 가 |", "가. 라마바사아 차카타 하가"] { assert!(md.contains(needle), "{needle:?} missing:\n{md}"); }
+    let txt = std::fs::read_to_string(run_path(&fixture("hwpx-novel.hwpx"), "txt").await.remove(0)).unwrap();
+    let preview = {
+        let mut z = zip::ZipArchive::new(std::fs::File::open(fixture("hwpx-novel.hwpx")).unwrap()).unwrap();
+        let mut s = String::new(); std::io::Read::read_to_string(&mut z.by_name("Preview/PrvText.txt").unwrap(), &mut s).unwrap(); s
+    };
+    let (a, b) = (words(&txt), words(&preview));
+    let missing: usize = b.iter().map(|(w, n)| n.saturating_sub(*a.get(w).unwrap_or(&0))).sum();
+    assert_eq!(missing, 0, "every word of Hancom's own preview is in our text");
+}
+
+#[tokio::test] async fn hwp_converts_to_word_hwpx_pdf_and_epub() {
+    let hwp = fixture("hwp-bizplan.hwp");
+    let docx = run_path(&hwp, "docx").await.remove(0);
+    let doc = native::read::docx::read(std::io::BufReader::new(std::fs::File::open(&docx).unwrap()), &Config::default()).unwrap();
+    assert!(!doc.tables().is_empty() && doc.blocks.len() > 20);
+    // HWP -> HWPX -> text equals HWP -> text.
+    let hwpx = run_path(&hwp, "hwpx").await.remove(0);
+    let direct = std::fs::read_to_string(run_path(&hwp, "txt").await.remove(0)).unwrap();
+    let back = std::fs::read_to_string(run_path(&hwpx, "txt").await.remove(0)).unwrap();
+    assert_eq!(words(&direct), words(&back));
+    assert!(!pdf_pages(&run_path(&hwp, "pdf").await.remove(0)).is_empty());
+    assert!(zip_names(&run_path(&hwp, "epub").await.remove(0)).iter().any(|n| n == "OEBPS/nav.xhtml"));
+}
+
+#[tokio::test] async fn unreadable_hwp_files_say_why() {
+    let dir = std::env::temp_dir().join(format!("hwp-bad-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    // HWP 3.0 files are not OLE containers.
+    let v3 = dir.join("old.hwp");
+    std::fs::write(&v3, b"HWP Document File V3.00 \x1a\x01\x02\x03\x04\x05").unwrap();
+    let e = try_run_path(&v3, "txt").await.unwrap_err();
+    assert!(e.message.contains("HWP 3.0"), "{}", e.message);
+    let garbage = dir.join("junk.hwpx");
+    std::fs::write(&garbage, b"not a zip").unwrap();
+    assert_eq!(try_run_path(&garbage, "txt").await.unwrap_err().code, converter_core::ErrorCode::EConvertFailed);
+}
