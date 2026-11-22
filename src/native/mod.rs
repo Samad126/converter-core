@@ -7,6 +7,7 @@ pub mod fonts;
 pub mod layout;
 pub mod model;
 pub mod render;
+pub mod subs;
 pub mod read;
 pub mod util;
 pub mod write;
@@ -20,6 +21,8 @@ const SLIDES: &[&str] = &[".pptx", ".pptm", ".ppsx", ".potx"];
 const ODT: &[&str] = &[".odt", ".ott"];
 const FODT: &[&str] = &[".fodt"];
 const HTML: &[&str] = &[".html", ".htm"];
+const SUBS: &[&str] = subs::EXTENSIONS;
+const DATA: &[&str] = &[".ndjson", ".avro"];
 const HWP: &[&str] = &[".hwp"];
 const HWPX: &[&str] = &[".hwpx"];
 const MHT: &[&str] = &[".mht", ".mhtml"];
@@ -31,6 +34,8 @@ const PAIRS: &[(&[&str], &[&str])] = &[
     (SLIDES, &["pdf", "txt", "html", "markdown", "png", "jpg", "hwpx"]),
     (&[".pdf"], &["png", "jpg", "tiff", "cbz", "pptx", "txt", "markdown", "html", "docx", "xlsx", "hwpx"]),
     (SHEET, &["csv", "tsv", "json", "html", "xlsx", "ods", "pdf", "png", "jpg", "hwpx"]),
+    (SUBS, &["srt", "vtt", "sbv", "lrc", "ass", "ssa"]),
+    (DATA, &["csv", "tsv", "json", "jsonl", "yaml", "xml", "toml", "ini", "sqlite"]),
     (HWP, &["pdf", "txt", "html", "markdown", "epub", "docx", "hwpx", "xlsx", "png", "jpg"]),
     (HWPX, &["pdf", "txt", "html", "markdown", "epub", "docx", "xlsx", "png", "jpg"]),
     (FODT, &["pdf", "txt", "html", "markdown", "epub", "docx", "hwpx", "png", "jpg"]),
@@ -167,6 +172,24 @@ pub async fn run(ctx: &Ctx<'_>, conv: &Resolved) -> Result<Vec<PathBuf>> {
     let (ext, target) = (conv.source.extension.clone(), conv.target.clone());
     if !supports(&ext, &target.id) {
         return Err(Error::new(ErrorCode::EUnsupported, format!("{ext} cannot become {} without an external engine.", target.id)));
+    }
+    if SUBS.contains(&ext.as_str()) {
+        let (input, out) = (ctx.input.clone(), ctx.out_dir.join(format!("converted{}", target.extension)));
+        let id = target.id.clone();
+        let out2 = out.clone();
+        tokio::task::spawn_blocking(move || -> Result<()> { let cues = subs::parse(&ext, &std::fs::read(&input)?)?; std::fs::write(&out2, subs::write(&id, &cues)?)?; Ok(()) })
+            .await.map_err(|e| Error::new(ErrorCode::EInternal, e.to_string()))??;
+        return Ok(vec![out]);
+    }
+    if DATA.contains(&ext.as_str()) {
+        let (input, out) = (ctx.input.clone(), ctx.out_dir.join(format!("converted{}", target.extension)));
+        let id = target.id.clone();
+        let out2 = out.clone();
+        tokio::task::spawn_blocking(move || -> Result<()> {
+            let value = if ext == ".avro" { read::avro::read(&std::fs::read(&input)?)? } else { crate::data::parse_source(".jsonl", &input)? };
+            crate::data::serialize_target(&id, &value, &out2)
+        }).await.map_err(|e| Error::new(ErrorCode::EInternal, e.to_string()))??;
+        return Ok(vec![out]);
     }
     if ext == ".pdf" && is_page_target(&target.id) || matches!(target.id.as_str(), "png" | "jpg") {
         let (cfg, input, out_dir, id) = (ctx.cfg.clone(), ctx.input.clone(), ctx.out_dir.clone(), target.id.clone());

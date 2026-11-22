@@ -1,4 +1,5 @@
 //! Built-in readers: open a file's own bytes and produce the neutral model.
+pub mod avro;
 pub mod docx;
 pub mod html;
 pub mod mht;

@@ -158,7 +158,7 @@ async fn run_path(src: &Path, target: &str) -> Vec<PathBuf> {
     let cfg = Config { raster_dpi: TEST_DPI, ..Config::default() };
     let ext = formats::extension_of(src);
     let conv = formats::resolve_conversion(&ext, target).unwrap_or_else(|| panic!("{ext} -> {target} not advertised"));
-    let ws = std::env::temp_dir().join(format!("native-p-{}-{}-{}", std::process::id(), src.file_stem().unwrap().to_string_lossy(), target));
+    let ws = std::env::temp_dir().join(format!("native-p-{}-{}-{}", std::process::id(), src.file_name().unwrap().to_string_lossy(), target));
     let _ = std::fs::remove_dir_all(&ws);
     let out_dir = ws.join("out");
     std::fs::create_dir_all(&out_dir).unwrap();
@@ -219,7 +219,7 @@ async fn try_run_path(src: &Path, target: &str) -> converter_core::Result<Vec<Pa
     let cfg = Config::default();
     let ext = formats::extension_of(src);
     let conv = formats::resolve_conversion(&ext, target).unwrap();
-    let ws = std::env::temp_dir().join(format!("native-t-{}-{}-{}", std::process::id(), src.file_stem().unwrap().to_string_lossy(), target));
+    let ws = std::env::temp_dir().join(format!("native-t-{}-{}-{}", std::process::id(), src.file_name().unwrap().to_string_lossy(), target));
     let out_dir = ws.join("out");
     std::fs::create_dir_all(&out_dir).unwrap();
     let input = ws.join(format!("input{ext}"));
@@ -390,4 +390,31 @@ fn words(s: &str) -> std::collections::BTreeMap<String, usize> {
     assert!(!csv.trim().is_empty());
     let json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(run_path(&fixture("any_sheets.xlsb"), "json").await.remove(0)).unwrap()).unwrap();
     assert!(json.is_object() || json.is_array(), "{json}");
+}
+
+// ---- subtitles and data files --------------------------------------------------------------------------------
+
+#[tokio::test] async fn subtitles_convert_between_every_format() {
+    for (src, target, needle) in [("sample.srt", "vtt", "WEBVTT"), ("sample.srt", "sbv", "0:00:01.000,0:00:02.500"), ("sample.srt", "lrc", "[00:01.00]Hello there"), ("sample.srt", "ass", "Dialogue: 0,0:00:01.00,0:00:02.50,Default,,0,0,0,,Hello there"),
+        ("sample.lrc", "srt", "00:00:01,500 --> 00:00:04,000"), ("sample.lrc", "vtt", "Second line")] {
+        let out = std::fs::read_to_string(run_path(&fixture(src), target).await.remove(0)).unwrap();
+        assert!(out.contains(needle), "{src} -> {target}: {needle:?} missing:\n{out}");
+    }
+}
+
+#[tokio::test] async fn ndjson_and_avro_become_tables_and_json() {
+    let dir = std::env::temp_dir().join(format!("nd-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let nd = dir.join("rows.ndjson");
+    std::fs::write(&nd, "{\"name\":\"Apples\",\"qty\":12}\n{\"name\":\"Pears\",\"qty\":7}\n").unwrap();
+    let csv = std::fs::read_to_string(run_path(&nd, "csv").await.remove(0)).unwrap();
+    assert_eq!(csv.replace("\r\n", "\n"), "name,qty\nApples,12\nPears,7\n");
+    use apache_avro::{types::Value, Schema, Writer};
+    let schema = Schema::parse_str(r#"{"type":"record","name":"t","fields":[{"name":"name","type":"string"},{"name":"qty","type":"int"}]}"#).unwrap();
+    let mut w = Writer::new(&schema, Vec::new()).unwrap();
+    for (n, q) in [("Apples", 12), ("Pears", 7)] { w.append(Value::Record(vec![("name".into(), Value::String(n.into())), ("qty".into(), Value::Int(q))])).unwrap(); }
+    let av = dir.join("rows.avro");
+    std::fs::write(&av, w.into_inner().unwrap()).unwrap();
+    let json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(run_path(&av, "json").await.remove(0)).unwrap()).unwrap();
+    assert_eq!(json, serde_json::json!([{"name": "Apples", "qty": 12}, {"name": "Pears", "qty": 7}]));
 }

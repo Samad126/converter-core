@@ -7,6 +7,22 @@
       "label": "HWPX",
       "mode": "direct",
       "multiple": false
+    },
+    "sbv": {
+      "id": "sbv",
+      "extension": ".sbv",
+      "mediaType": "text/plain; charset=utf-8",
+      "label": "SBV",
+      "mode": "transcode",
+      "multiple": false
+    },
+    "lrc": {
+      "id": "lrc",
+      "extension": ".lrc",
+      "mediaType": "text/plain; charset=utf-8",
+      "label": "LRC",
+      "mode": "transcode",
+      "multiple": false
     }
   },
   "sources": {
@@ -255,6 +271,58 @@
       "mediaType": "application/vnd.ms-visio.drawing",
       "targets": [
         "pdf"
+      ]
+    },
+    ".sbv": {
+      "extension": ".sbv",
+      "mediaType": "text/plain",
+      "targets": [
+        "srt",
+        "vtt",
+        "ass",
+        "ssa",
+        "lrc"
+      ]
+    },
+    ".lrc": {
+      "extension": ".lrc",
+      "mediaType": "text/plain",
+      "targets": [
+        "srt",
+        "vtt",
+        "ass",
+        "ssa",
+        "sbv"
+      ]
+    },
+    ".ndjson": {
+      "extension": ".ndjson",
+      "mediaType": "application/x-ndjson",
+      "targets": [
+        "csv",
+        "tsv",
+        "json",
+        "jsonl",
+        "yaml",
+        "xml",
+        "toml",
+        "ini",
+        "sqlite"
+      ]
+    },
+    ".avro": {
+      "extension": ".avro",
+      "mediaType": "application/avro",
+      "targets": [
+        "csv",
+        "tsv",
+        "json",
+        "yaml",
+        "xml",
+        "toml",
+        "ini",
+        "sqlite",
+        "jsonl"
       ]
     }
   },
