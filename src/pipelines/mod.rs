@@ -14,6 +14,11 @@ use std::time::Duration;
 
 /// The external tool a conversion really needs, or `None` when it runs in pure Rust
 /// (the native image path never touches ffmpeg, so a PNG -> WebP must not ask for it).
+pub(crate) fn image_displayable(img: ::image::DynamicImage) -> ::image::DynamicImage { image::to_displayable(img) }
+pub(crate) fn image_decodable(ext: &str) -> bool { image::decodable(ext) }
+pub(crate) fn image_encoder(id: &str) -> Option<::image::ImageFormat> { image::encoder_for(id) }
+pub(crate) fn image_encode(img: ::image::DynamicImage, fmt: ::image::ImageFormat, q: u8, out: &Path) -> Result<()> { image::encode_to(img, fmt, q, out) }
+
 pub fn required_tool_for(conv: &Resolved) -> Option<&'static str> {
     if conv.engine == Engine::Ffmpeg && image::can_handle(conv) { return None; }
     // A PDF's pages are drawn by poppler when present, otherwise by the built-in renderer: nothing to install.

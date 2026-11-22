@@ -8,6 +8,7 @@ pub mod font;
 pub mod fonts;
 pub mod layout;
 pub mod model;
+pub mod raw;
 pub mod render;
 pub mod subs;
 pub mod read;
@@ -27,12 +28,15 @@ const SUBS: &[&str] = subs::EXTENSIONS;
 const DATA: &[&str] = &[".ndjson", ".avro"];
 const FONTS: &[&str] = &[".ttf", ".otf", ".woff", ".eot"];
 const ARCHIVES: &[&str] = &[".zip", ".cbz", ".tar", ".tgz", ".gz", ".xz", ".txz", ".lzma", ".lz4", ".zipx"];
+const RAW: &[&str] = raw::EXTENSIONS;
 const HWP: &[&str] = &[".hwp"];
 const HWPX: &[&str] = &[".hwpx"];
 const MHT: &[&str] = &[".mht", ".mhtml"];
 const SHEET: &[&str] = &[".xlsx", ".xlsm", ".xls", ".ods", ".xlsb", ".xltx", ".xlt", ".ots"];
 
 /// `(source extensions, target ids)` this module can convert. A source never lists itself as a target.
+const IMAGE_TARGETS: &[&str] = &["png-image", "jpg-image", "bmp", "gif", "tiff", "webp", "ico", "qoi", "tga", "pdf"];
+
 const PAIRS: &[(&[&str], &[&str])] = &[
     (WORD, &["txt", "html", "markdown", "epub", "pdf", "png", "jpg", "hwpx"]),
     (SLIDES, &["pdf", "txt", "html", "markdown", "png", "jpg", "hwpx"]),
@@ -44,6 +48,9 @@ const PAIRS: &[(&[&str], &[&str])] = &[
     (&[".woff"], &["ttf", "otf"]),
     (&[".eot"], &["ttf", "otf", "woff"]),
     (ARCHIVES, &["zip", "tar", "tar.gz", "cbz"]),
+    (&[".png", ".jpg", ".jpeg", ".jpe", ".jfif", ".bmp", ".gif", ".webp", ".tif", ".tiff", ".ico", ".qoi", ".tga"], &["pdf"]),
+    (&[".dds", ".exr", ".hdr", ".pnm", ".pbm", ".pgm", ".ppm", ".pam"], IMAGE_TARGETS),
+    (RAW, IMAGE_TARGETS),
     (HWP, &["pdf", "txt", "html", "markdown", "epub", "docx", "hwpx", "xlsx", "png", "jpg"]),
     (HWPX, &["pdf", "txt", "html", "markdown", "epub", "docx", "xlsx", "png", "jpg"]),
     (FODT, &["pdf", "txt", "html", "markdown", "epub", "docx", "hwpx", "png", "jpg"]),
@@ -146,6 +153,12 @@ pub fn raster_pdf(cfg: &crate::Config, pdf: Vec<u8>, target_id: &str, out_dir: &
     }
 }
 
+/// RAW files, the image formats only built-in code reads, and any picture becoming a PDF.
+fn is_image_job(ext: &str, target: &str) -> bool {
+    const OLD: &[&str] = &[".png", ".jpg", ".jpeg", ".jpe", ".jfif", ".bmp", ".gif", ".webp", ".tif", ".tiff", ".ico", ".qoi", ".tga"];
+    RAW.contains(&ext) || (crate::pipelines::image_decodable(ext) && (target == "pdf" || !OLD.contains(&ext)))
+}
+
 fn is_page_target(id: &str) -> bool { matches!(id, "png" | "jpg" | "tiff" | "cbz" | "pptx") }
 
 /// The spreadsheet view of a result; a document with no tables has nothing to put in one.
@@ -199,6 +212,25 @@ pub async fn run(ctx: &Ctx<'_>, conv: &Resolved) -> Result<Vec<PathBuf>> {
             let stem = if stem.is_empty() { "file" } else { stem };
             let un = archive::unpack(&ext, stem, &std::fs::read(&input)?, &cfg)?;
             archive::pack(&id, &un.files, &out2)
+        }).await.map_err(|e| Error::new(ErrorCode::EInternal, e.to_string()))??;
+        return Ok(vec![out]);
+    }
+    if is_image_job(&ext, &target.id) {
+        let (input, out) = (ctx.input.clone(), ctx.out_dir.join(format!("converted{}", target.extension)));
+        let (id, quality) = (target.id.clone(), ctx.cfg.raster_jpeg_quality as u8);
+        let out2 = out.clone();
+        tokio::task::spawn_blocking(move || -> Result<()> {
+            let bytes = std::fs::read(&input)?;
+            // RAW files give their embedded JPEG preview; everything else decodes with the image crate.
+            let (data, mime) = if RAW.contains(&ext.as_str()) { (raw::preview(&bytes)?, "image/jpeg".to_string()) } else { (bytes, "image/x".to_string()) };
+            if id == "pdf" {
+                let pdf = write::pdf::images_to_pdf(vec![model::Image { data, mime, width_pt: None, height_pt: None }], "Image")?;
+                std::fs::write(&out2, pdf)?;
+                return Ok(());
+            }
+            let fmt = crate::pipelines::image_encoder(&id).ok_or_else(|| Error::new(ErrorCode::EUnsupported, format!("No built-in image output \"{id}\".")))?;
+            let img = image::load_from_memory(&data).map_err(|e| Error::new(ErrorCode::EConvertFailed, format!("Could not read the image: {e}")))?;
+            crate::pipelines::image_encode(img, fmt, quality, &out2)
         }).await.map_err(|e| Error::new(ErrorCode::EInternal, e.to_string()))??;
         return Ok(vec![out]);
     }

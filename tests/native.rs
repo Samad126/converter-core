@@ -452,3 +452,81 @@ fn words(s: &str) -> std::collections::BTreeMap<String, usize> {
     let err = try_run_path(&ttf, "woff").await;
     assert!(err.is_ok());
 }
+
+// ---- images ---------------------------------------------------------------------------------------------------
+
+fn red_png_bytes(w: u32, h: u32) -> Vec<u8> {
+    let img = image::RgbImage::from_pixel(w, h, image::Rgb([220, 30, 30]));
+    let mut c = std::io::Cursor::new(vec![]);
+    image::DynamicImage::ImageRgb8(img).write_to(&mut c, image::ImageFormat::Png).unwrap();
+    c.into_inner()
+}
+
+#[tokio::test] async fn extra_image_formats_decode_and_encode() {
+    let dir = std::env::temp_dir().join(format!("img-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let rgb = image::DynamicImage::ImageRgb8(image::RgbImage::from_pixel(8, 6, image::Rgb([220, 30, 30])));
+    let mut sources: Vec<(String, Vec<u8>)> = vec![];
+    for (name, fmt) in [("a.pnm", image::ImageFormat::Pnm), ("b.exr", image::ImageFormat::OpenExr), ("c.hdr", image::ImageFormat::Hdr)] {
+        let mut c = std::io::Cursor::new(vec![]);
+        match fmt { image::ImageFormat::OpenExr | image::ImageFormat::Hdr => image::DynamicImage::ImageRgb32F(rgb.to_rgb32f()).write_to(&mut c, fmt).unwrap(), _ => rgb.write_to(&mut c, fmt).unwrap() }
+        sources.push((name.into(), c.into_inner()));
+    }
+    // A 4x4 DXT1 texture: one block, both colours defined, every texel index 0 = colour 0 (pure red in RGB565).
+    let mut dds = b"DDS ".to_vec();
+    for v in [124u32, 0x1007, 4, 4, 8, 0, 0] { dds.extend(v.to_le_bytes()); }
+    dds.extend([0u8; 44]);
+    for v in [32u32, 4] { dds.extend(v.to_le_bytes()); }
+    dds.extend(b"DXT1"); dds.extend([0u8; 20]);
+    dds.extend(0x1000u32.to_le_bytes()); dds.extend([0u8; 16]);
+    dds.extend([0x00, 0xF8, 0x00, 0x00, 0, 0, 0, 0]);
+    sources.push(("d.dds".into(), dds));
+    for (name, bytes) in sources {
+        let p = dir.join(&name);
+        std::fs::write(&p, bytes).unwrap();
+        for target in ["png-image", "jpg-image", "webp", "pdf"] {
+            let out = run_path(&p, target).await.remove(0);
+            let data = std::fs::read(&out).unwrap();
+            assert!(!data.is_empty(), "{name} -> {target}");
+            if target == "pdf" { assert_eq!(pdf_pages(&out).len(), 1); } else {
+                let img = image::load_from_memory(&data).unwrap().to_rgb8();
+                let px = img.get_pixel(img.width() / 2, img.height() / 2).0;
+                assert!(px[0] > 150 && px[1] < 130 && px[2] < 130 && px[0] as i32 - px[1] as i32 > 80, "{name} -> {target}: the red survived: {px:?}");
+            }
+        }
+    }
+}
+
+#[tokio::test] async fn any_picture_becomes_a_pdf_page_of_its_own_size() {
+    let dir = std::env::temp_dir().join(format!("img2-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let p = dir.join("wide.png");
+    std::fs::write(&p, red_png_bytes(400, 200)).unwrap();
+    let pdf = run_path(&p, "pdf").await.remove(0);
+    let (w, h) = pdf_pages(&pdf)[0];
+    assert!((w - 300.0).abs() < 0.5 && (h - 150.0).abs() < 0.5, "{w}x{h}");
+    assert!(std::fs::read(&pdf).unwrap().starts_with(b"%PDF"));
+}
+
+#[tokio::test] async fn raw_files_give_their_embedded_preview() {
+    // A DNG-shaped TIFF whose IFD0 points (tags 0x201/0x202) at a JPEG preview.
+    let mut jpg = std::io::Cursor::new(vec![]);
+    image::codecs::jpeg::JpegEncoder::new_with_quality(&mut jpg, 85).encode_image(&image::RgbImage::from_pixel(48, 32, image::Rgb([20, 120, 220]))).unwrap();
+    let jpg = jpg.into_inner();
+    let mut raw = b"II*\0\x08\0\0\0".to_vec();
+    raw.extend(2u16.to_le_bytes());
+    let data_at = 8 + 2 + 2 * 12 + 4;
+    for (tag, val) in [(0x201u16, data_at as u32), (0x202, jpg.len() as u32)] { raw.extend(tag.to_le_bytes()); raw.extend(4u16.to_le_bytes()); raw.extend(1u32.to_le_bytes()); raw.extend(val.to_le_bytes()); }
+    raw.extend(0u32.to_le_bytes());
+    raw.extend(&jpg);
+    let dir = std::env::temp_dir().join(format!("raw-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    for ext in ["dng", "cr2", "nef", "arw"] {
+        let p = dir.join(format!("shot.{ext}"));
+        std::fs::write(&p, &raw).unwrap();
+        let out = run_path(&p, "png-image").await.remove(0);
+        let img = image::open(&out).unwrap().to_rgb8();
+        assert_eq!((img.width(), img.height()), (48, 32), "{ext}");
+        assert!(img.get_pixel(10, 10).0[2] > 150, "{ext}: blue preview");
+    }
+}

@@ -19,7 +19,7 @@ fn load_image(img: &crate::native::model::Image) -> Option<krilla::image::Image>
         _ => None,
     };
     direct.or_else(|| {
-        let rgba = image::load_from_memory(&img.data).ok()?.to_rgba8();
+        let rgba = crate::pipelines::image_displayable(image::load_from_memory(&img.data).ok()?).to_rgba8();
         let (w, h) = rgba.dimensions();
         Some(krilla::image::Image::from_rgba8(rgba.into_raw(), w, h))
     })
@@ -156,4 +156,18 @@ pub fn deck_to_pdf(deck: &Deck, title: &str) -> Result<Vec<u8>> {
     }
     let layout = e.finish();
     render(&layout, &fonts, title)
+}
+
+/// One page per picture, each page exactly the picture's size (at 96 dpi), the picture filling it.
+pub fn images_to_pdf(images: Vec<Image>, title: &str) -> Result<Vec<u8>> {
+    let fonts = FontSet::new();
+    let mut pages = vec![];
+    for (i, img) in images.iter().enumerate() {
+        let (w, h) = image::ImageReader::new(std::io::Cursor::new(&img.data)).with_guessed_format().ok().and_then(|r| r.into_dimensions().ok())
+            .ok_or_else(|| Error::new(ErrorCode::EConvertFailed, "Could not read the image."))?;
+        let (pw, ph) = ((w as f32 * 0.75).clamp(36.0, 14_400.0), (h as f32 * 0.75).clamp(36.0, 14_400.0));
+        pages.push(Page { width: pw, height: ph, cmds: vec![Cmd::Image { x: 0.0, y: 0.0, w: pw, h: ph, img: i }] });
+    }
+    if pages.is_empty() { return Err(Error::new(ErrorCode::EConvertFailed, "There is no picture to put in a PDF.")); }
+    render(&Layout { pages, images }, &fonts, title)
 }

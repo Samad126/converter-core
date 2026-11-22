@@ -369,6 +369,390 @@
         "7z",
         "cbz"
       ]
+    },
+    ".dds": {
+      "extension": ".dds",
+      "mediaType": "image/vnd-ms.dds",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".exr": {
+      "extension": ".exr",
+      "mediaType": "image/x-exr",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".hdr": {
+      "extension": ".hdr",
+      "mediaType": "image/vnd.radiance",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".pnm": {
+      "extension": ".pnm",
+      "mediaType": "image/x-portable-anymap",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".pbm": {
+      "extension": ".pbm",
+      "mediaType": "image/x-portable-bitmap",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".pgm": {
+      "extension": ".pgm",
+      "mediaType": "image/x-portable-graymap",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".ppm": {
+      "extension": ".ppm",
+      "mediaType": "image/x-portable-pixmap",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".pam": {
+      "extension": ".pam",
+      "mediaType": "image/x-portable-arbitrarymap",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".dng": {
+      "extension": ".dng",
+      "mediaType": "image/x-raw",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".cr2": {
+      "extension": ".cr2",
+      "mediaType": "image/x-raw",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".nef": {
+      "extension": ".nef",
+      "mediaType": "image/x-raw",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".arw": {
+      "extension": ".arw",
+      "mediaType": "image/x-raw",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".orf": {
+      "extension": ".orf",
+      "mediaType": "image/x-raw",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".rw2": {
+      "extension": ".rw2",
+      "mediaType": "image/x-raw",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".pef": {
+      "extension": ".pef",
+      "mediaType": "image/x-raw",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".srw": {
+      "extension": ".srw",
+      "mediaType": "image/x-raw",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".raf": {
+      "extension": ".raf",
+      "mediaType": "image/x-raw",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".mrw": {
+      "extension": ".mrw",
+      "mediaType": "image/x-raw",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".erf": {
+      "extension": ".erf",
+      "mediaType": "image/x-raw",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".3fr": {
+      "extension": ".3fr",
+      "mediaType": "image/x-raw",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".kdc": {
+      "extension": ".kdc",
+      "mediaType": "image/x-raw",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".mef": {
+      "extension": ".mef",
+      "mediaType": "image/x-raw",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".nrw": {
+      "extension": ".nrw",
+      "mediaType": "image/x-raw",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
+    },
+    ".sr2": {
+      "extension": ".sr2",
+      "mediaType": "image/x-raw",
+      "targets": [
+        "png-image",
+        "jpg-image",
+        "bmp",
+        "gif",
+        "tiff",
+        "webp",
+        "ico",
+        "qoi",
+        "tga",
+        "pdf"
+      ]
     }
   },
   "media": {}
