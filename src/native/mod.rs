@@ -29,6 +29,7 @@ const DATA: &[&str] = &[".ndjson", ".avro"];
 const FONTS: &[&str] = &[".ttf", ".otf", ".woff", ".eot"];
 const ARCHIVES: &[&str] = &[".zip", ".cbz", ".tar", ".tgz", ".gz", ".xz", ".txz", ".lzma", ".lz4", ".zipx"];
 const RAW: &[&str] = raw::EXTENSIONS;
+const MAIL: &[&str] = &[".msg", ".mbox"];
 const HWP: &[&str] = &[".hwp"];
 const HWPX: &[&str] = &[".hwpx"];
 const MHT: &[&str] = &[".mht", ".mhtml"];
@@ -51,6 +52,8 @@ const PAIRS: &[(&[&str], &[&str])] = &[
     (&[".png", ".jpg", ".jpeg", ".jpe", ".jfif", ".bmp", ".gif", ".webp", ".tif", ".tiff", ".ico", ".qoi", ".tga"], &["pdf"]),
     (&[".dds", ".exr", ".hdr", ".pnm", ".pbm", ".pgm", ".ppm", ".pam"], IMAGE_TARGETS),
     (RAW, IMAGE_TARGETS),
+    (&[".eml"], &["markdown", "pdf", "docx", "epub", "hwpx", "png", "jpg"]),
+    (MAIL, &["txt", "html", "markdown", "pdf", "docx", "epub", "hwpx", "png", "jpg"]),
     (HWP, &["pdf", "txt", "html", "markdown", "epub", "docx", "hwpx", "xlsx", "png", "jpg"]),
     (HWPX, &["pdf", "txt", "html", "markdown", "epub", "docx", "xlsx", "png", "jpg"]),
     (FODT, &["pdf", "txt", "html", "markdown", "epub", "docx", "hwpx", "png", "jpg"]),
@@ -79,6 +82,10 @@ fn read(ctx: &Ctx<'_>, ext: &str) -> Result<Content> {
         let f = std::fs::File::open(&ctx.input)?;
         return read::pptx::read(std::io::BufReader::new(f), ctx.cfg).map(Content::Deck);
     }
+    if ext == ".eml" || MAIL.contains(&ext) {
+        let html = mail_html(&std::fs::read(&ctx.input)?, ext)?;
+        return Ok(Content::Doc(read::html::parse(&html, &|_| None)));
+    }
     if ODT.contains(&ext) {
         let f = std::fs::File::open(&ctx.input)?;
         return read::odt::read(std::io::BufReader::new(f), ctx.cfg).map(Content::Doc);
@@ -106,6 +113,15 @@ fn read(ctx: &Ctx<'_>, ext: &str) -> Result<Content> {
         return read::sheet::read(&path, ctx.cfg).map(Content::Book);
     }
     Err(Error::new(ErrorCode::EUnsupported, format!("No built-in reader for \"{ext}\".")))
+}
+
+/// The message(s) in a mail file as one HTML document.
+fn mail_html(bytes: &[u8], ext: &str) -> Result<String> {
+    Ok(match ext {
+        ".msg" => crate::email::html_of(&crate::email::parse_msg(bytes)?),
+        ".mbox" => crate::email::join_html(&crate::email::parse_mbox(bytes)?),
+        _ => crate::email::html_of(&crate::email::parse(bytes)?),
+    })
 }
 
 fn pdf_bytes(content: Content) -> Result<Vec<u8>> {
@@ -193,6 +209,22 @@ pub async fn run(ctx: &Ctx<'_>, conv: &Resolved) -> Result<Vec<PathBuf>> {
     let (ext, target) = (conv.source.extension.clone(), conv.target.clone());
     if !supports(&ext, &target.id) {
         return Err(Error::new(ErrorCode::EUnsupported, format!("{ext} cannot become {} without an external engine.", target.id)));
+    }
+    if MAIL.contains(&ext.as_str()) && matches!(target.id.as_str(), "txt" | "html") {
+        let (input, out) = (ctx.input.clone(), ctx.out_dir.join(format!("converted{}", target.extension)));
+        let id = target.id.clone();
+        let out2 = out.clone();
+        tokio::task::spawn_blocking(move || -> Result<()> {
+            let bytes = std::fs::read(&input)?;
+            let text = match (ext.as_str(), id.as_str()) {
+                (".msg", "txt") => crate::email::text_of(&crate::email::parse_msg(&bytes)?),
+                (".mbox", "txt") => crate::email::join_text(&crate::email::parse_mbox(&bytes)?),
+                _ => mail_html(&bytes, &ext)?,
+            };
+            std::fs::write(&out2, text)?;
+            Ok(())
+        }).await.map_err(|e| Error::new(ErrorCode::EInternal, e.to_string()))??;
+        return Ok(vec![out]);
     }
     if SUBS.contains(&ext.as_str()) {
         let (input, out) = (ctx.input.clone(), ctx.out_dir.join(format!("converted{}", target.extension)));

@@ -192,7 +192,7 @@ mod tests {
     fn matrix_loads_with_expected_sizes() {
         let m = matrix();
         assert_eq!(m.targets.len(), 83);
-        assert_eq!(m.sources.len(), 160);
+        assert_eq!(m.sources.len(), 162);
         assert_eq!(m.media.len(), 35);
     }
 

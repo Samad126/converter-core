@@ -861,6 +861,36 @@
         "3ds",
         "x3d"
       ]
+    },
+    ".msg": {
+      "extension": ".msg",
+      "mediaType": "application/vnd.ms-outlook",
+      "targets": [
+        "txt",
+        "html",
+        "markdown",
+        "pdf",
+        "docx",
+        "epub",
+        "hwpx",
+        "png",
+        "jpg"
+      ]
+    },
+    ".mbox": {
+      "extension": ".mbox",
+      "mediaType": "application/mbox",
+      "targets": [
+        "txt",
+        "html",
+        "markdown",
+        "pdf",
+        "docx",
+        "epub",
+        "hwpx",
+        "png",
+        "jpg"
+      ]
     }
   },
   "media": {

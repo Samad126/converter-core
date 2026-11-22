@@ -530,3 +530,38 @@ fn red_png_bytes(w: u32, h: u32) -> Vec<u8> {
         assert!(img.get_pixel(10, 10).0[2] > 150, "{ext}: blue preview");
     }
 }
+
+// ---- mail ------------------------------------------------------------------------------------------------------
+
+fn utf16z(s: &str) -> Vec<u8> { s.encode_utf16().chain([0]).flat_map(|u| u.to_le_bytes()).collect() }
+
+#[tokio::test] async fn outlook_msg_and_mbox_convert_to_text_html_and_documents() {
+    let dir = std::env::temp_dir().join(format!("mail-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    // A minimal Outlook message: unicode MAPI string streams plus the sent time in the properties stream.
+    let msg = dir.join("hello.msg");
+    {
+        let mut cf = cfb::CompoundFile::create(std::fs::File::create(&msg).unwrap()).unwrap();
+        for (tag, v) in [("0037", "Grüße from Seoul 안녕"), ("1000", "Body line one.\r\nBody line two."), ("0C1A", "Ann Lee"), ("5D01", "ann@example.com"), ("0E04", "Bob; cy@example.org")] {
+            std::io::Write::write_all(&mut cf.create_stream(format!("/__substg1.0_{tag}001F")).unwrap(), &utf16z(v)).unwrap();
+        }
+        let ft: u64 = (1_704_189_600u64 + 11_644_473_600) * 10_000_000; // 2024-01-02 10:00:00 UTC
+        let mut props = vec![0u8; 32];
+        props.extend(0x0040u16.to_le_bytes()); props.extend(0x0039u16.to_le_bytes()); props.extend(0u32.to_le_bytes()); props.extend(ft.to_le_bytes());
+        std::io::Write::write_all(&mut cf.create_stream("/__properties_version1.0").unwrap(), &props).unwrap();
+    }
+    let txt = std::fs::read_to_string(run_path(&msg, "txt").await.remove(0)).unwrap();
+    assert!(txt.starts_with("From: \"Ann Lee\" <ann@example.com>\nTo: Bob, cy@example.org\nSubject: Grüße from Seoul 안녕\nDate: Tue, 02 Jan 2024 10:00:00 GMT\n\nBody line one."), "{txt}");
+    let docx = run_path(&msg, "docx").await.remove(0);
+    let doc = native::read::docx::read(std::io::BufReader::new(std::fs::File::open(&docx).unwrap()), &Config::default()).unwrap();
+    assert!(native::write::text::to_txt(&doc).contains("안녕") && native::write::text::to_txt(&doc).contains("Body line two."));
+
+    let mbox = dir.join("box.mbox");
+    std::fs::write(&mbox, "From a@x Tue Jan  2 10:00:00 2024\nFrom: a@x.com\nSubject: First\n\nOne\n\nFrom b@y Tue Jan  2 11:00:00 2024\nFrom: b@y.com\nSubject: Second\n\nTwo\n").unwrap();
+    let all = std::fs::read_to_string(run_path(&mbox, "txt").await.remove(0)).unwrap();
+    assert!(all.contains("Subject: First") && all.contains("Subject: Second") && all.contains("----------"), "{all}");
+    // .eml can now become a PDF too.
+    let eml = dir.join("m.eml");
+    std::fs::write(&eml, "From: Ann <ann@x.com>\r\nSubject: Hi\r\nDate: Tue, 02 Jan 2024 10:00:00 +0000\r\nContent-Type: text/plain\r\n\r\nHello there\r\n").unwrap();
+    assert!(!pdf_pages(&run_path(&eml, "pdf").await.remove(0)).is_empty());
+}
