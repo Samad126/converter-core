@@ -137,3 +137,80 @@ fn pdf_text(p: &Path) -> Option<String> {
     assert!(std::fs::read_to_string(run("pic.docx", "html").await).unwrap().contains("data:image/png;base64,"));
     assert!(zip_names(&run("pic.docx", "epub").await).iter().any(|n| n == "OEBPS/images/img1.png"));
 }
+
+fn png_size(p: &Path) -> (u32, u32) { let i = image::open(p).unwrap(); (i.width(), i.height()) }
+
+/// A multi-page PDF made by our own writer from the big Word fixture (built once, shared by the tests below).
+async fn big_pdf() -> PathBuf {
+    static CELL: tokio::sync::OnceCell<PathBuf> = tokio::sync::OnceCell::const_new();
+    CELL.get_or_init(|| async {
+        let pdf = run("big.docx", "pdf").await;
+        let dest = std::env::temp_dir().join(format!("native-big-{}.pdf", std::process::id()));
+        std::fs::copy(&pdf, &dest).unwrap();
+        dest
+    }).await.clone()
+}
+
+/// Low resolution keeps the debug-build test fast; the maths is the same at any dpi.
+const TEST_DPI: u32 = 40;
+
+async fn run_path(src: &Path, target: &str) -> Vec<PathBuf> {
+    let cfg = Config { raster_dpi: TEST_DPI, ..Config::default() };
+    let ext = formats::extension_of(src);
+    let conv = formats::resolve_conversion(&ext, target).unwrap_or_else(|| panic!("{ext} -> {target} not advertised"));
+    let ws = std::env::temp_dir().join(format!("native-p-{}-{}-{}", std::process::id(), src.file_stem().unwrap().to_string_lossy(), target));
+    let _ = std::fs::remove_dir_all(&ws);
+    let out_dir = ws.join("out");
+    std::fs::create_dir_all(&out_dir).unwrap();
+    let input = ws.join(format!("input{ext}"));
+    std::fs::copy(src, &input).unwrap();
+    let ctx = Ctx { cfg: &cfg, workspace: ws.clone(), input, out_dir, profile_dir: ws.join("p"), timeout: cfg.convert_timeout, ocr: false };
+    native::run(&ctx, &conv).await.unwrap()
+}
+
+#[tokio::test] async fn pdf_pages_to_images_without_poppler() {
+    let pdf = big_pdf().await;
+    let n = pdf_pages(&pdf).len();
+    assert!(n >= 5, "{n}");
+    for (target, magic) in [("png", &b"\x89PNG"[..]), ("jpg", &b"\xff\xd8"[..]), ("tiff", &b"II*\0"[..])] {
+        let files = run_path(&pdf, target).await;
+        assert_eq!(files.len(), n, "{target}: one file per page");
+        assert!(std::fs::read(&files[0]).unwrap().starts_with(magic) || std::fs::read(&files[0]).unwrap().starts_with(b"MM\0*"), "{target}");
+        assert!(files[0].file_name().unwrap().to_string_lossy().starts_with("page-001"));
+    }
+    // The fixture declares its own page size, so compare against the PDF.
+    let files = run_path(&pdf, "png").await;
+    let (w, _) = png_size(&files[0]);
+    let expect = (pdf_pages(&pdf)[0].0 * TEST_DPI as f32 / 72.0).round() as u32;
+    assert!((w as i32 - expect as i32).abs() <= 1, "{w} vs {expect}");
+    // The rendered page is not blank: it has dark text pixels.
+    assert!(image::open(&files[0]).unwrap().to_luma8().pixels().filter(|p| p.0[0] < 100).count() > 150);
+}
+
+#[tokio::test] async fn pdf_to_cbz_is_a_zip_of_ordered_pages() {
+    let pdf = big_pdf().await;
+    let files = run_path(&pdf, "cbz").await;
+    assert_eq!(files.len(), 1);
+    let names = zip_names(&files[0]);
+    assert_eq!(names.len(), pdf_pages(&pdf).len());
+    assert_eq!(names[0], "001.jpg");
+}
+
+#[tokio::test] async fn pdf_to_pptx_is_a_deck_our_reader_and_libreoffice_agree_on() {
+    let pdf = big_pdf().await;
+    let files = run_path(&pdf, "pptx").await;
+    let deck = native::read::pptx::read(std::io::Cursor::new(std::fs::read(&files[0]).unwrap()), &Config::default()).unwrap();
+    assert_eq!(deck.slides.len(), pdf_pages(&pdf).len());
+    assert!(matches!(deck.slides[0].shapes[0], converter_core::native::model::Shape::Picture { .. }));
+    let (pw, ph) = pdf_pages(&pdf)[0];
+    assert!((deck.width_pt - pw).abs() < 0.5 && (deck.height_pt - ph).abs() < 0.5);
+}
+
+#[tokio::test] async fn office_files_to_images_through_our_own_pdf() {
+    let pngs = run_path(&fixture("sample.docx"), "png").await;
+    assert_eq!(pngs.len(), 1);
+    let pngs = run_path(&fixture("deck.pptx"), "jpg").await;
+    assert_eq!(pngs.len(), 2);
+    assert!((png_size(&pngs[0]).0 as f32 - 793.7 * TEST_DPI as f32 / 72.0).abs() < 2.0, "slides render at the configured dpi");
+    assert_eq!(run_path(&fixture("sample.xlsx"), "png").await.len(), 1);
+}

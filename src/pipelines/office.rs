@@ -53,12 +53,19 @@ pub async fn raster(ctx: &Ctx<'_>, conv: &Resolved) -> Result<Vec<PathBuf>> {
 
     let raster_dir = ctx.workspace.join("raster");
     tokio::fs::create_dir_all(&raster_dir).await?;
-    let png = conv.target.id == "png";
-    let mut args = vec![(if png { "-png" } else { "-jpeg" }).to_string(), "-r".into(), ctx.cfg.raster_dpi.to_string()];
-    if !png { args.extend(["-jpegopt".into(), format!("quality={}", ctx.cfg.raster_jpeg_quality)]); }
-    args.push(pdf.to_string_lossy().into_owned());
-    args.push(raster_dir.join("slide").to_string_lossy().into_owned());
-    process::run(&ctx.bin("poppler")?, &args, &ctx.workspace, ctx.timeout).await?.require_ok("pdftoppm")?;
+    // pdftoppm when poppler is installed (the established route); the built-in renderer otherwise.
+    if let Ok(poppler) = ctx.bin("poppler") {
+        let png = conv.target.id == "png";
+        let mut args = vec![(if png { "-png" } else { "-jpeg" }).to_string(), "-r".into(), ctx.cfg.raster_dpi.to_string()];
+        if !png { args.extend(["-jpegopt".into(), format!("quality={}", ctx.cfg.raster_jpeg_quality)]); }
+        args.push(pdf.to_string_lossy().into_owned());
+        args.push(raster_dir.join("slide").to_string_lossy().into_owned());
+        process::run(&poppler, &args, &ctx.workspace, ctx.timeout).await?.require_ok("pdftoppm")?;
+    } else {
+        let (cfg, id, dir, bytes) = (ctx.cfg.clone(), conv.target.id.clone(), raster_dir.clone(), tokio::fs::read(&pdf).await?);
+        tokio::task::spawn_blocking(move || crate::native::raster_pdf(&cfg, bytes, &id, &dir))
+            .await.map_err(|e| Error::new(ErrorCode::EInternal, e.to_string()))??;
+    }
 
     let pages = collect_produced(&raster_dir, &conv.target.extension);
     if pages.is_empty() {

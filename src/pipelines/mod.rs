@@ -16,6 +16,8 @@ use std::time::Duration;
 /// (the native image path never touches ffmpeg, so a PNG -> WebP must not ask for it).
 pub fn required_tool_for(conv: &Resolved) -> Option<&'static str> {
     if conv.engine == Engine::Ffmpeg && image::can_handle(conv) { return None; }
+    // A PDF's pages are drawn by poppler when present, otherwise by the built-in renderer: nothing to install.
+    if conv.engine == Engine::Soffice && conv.target.mode == "raster" && conv.source.extension == ".pdf" { return None; }
     engines::required_tool(conv.engine)
 }
 
@@ -103,6 +105,11 @@ mod tests {
         assert_eq!(required_tool_for(&resolve_conversion(".png", "avif").unwrap()), Some("ffmpeg"));
         assert_eq!(required_tool_for(&resolve_conversion(".docx", "pdf").unwrap()), Some("libreoffice"));
         assert_eq!(required_tool_for(&resolve_conversion(".csv", "json").unwrap()), None);
+    }
+    #[test] fn pdf_pages_need_no_tool_because_the_built_in_renderer_replaces_poppler() {
+        assert_eq!(required_tool_for(&resolve_conversion(".pdf", "png").unwrap()), None);
+        assert_eq!(required_tool_for(&resolve_conversion(".pdf", "jpg").unwrap()), None);
+        assert_eq!(required_tool_for(&resolve_conversion(".pptx", "png").unwrap()), Some("libreoffice"));
     }
     #[test] fn built_in_converters_remove_the_install_prompt() {
         let cfg = Config { engines_dir: std::env::temp_dir().join("no-engines-here"), ..Config::default() };
