@@ -137,3 +137,23 @@ pub fn book_to_pdf(book: &Workbook, title: &str) -> Result<Vec<u8>> {
     render(&Layout { pages: layout_pages, images }, &fonts, title)
 }
 
+/// One page per slide, at the slide's own size.
+pub fn deck_to_pdf(deck: &Deck, title: &str) -> Result<Vec<u8>> {
+    let mut fonts = FontSet::new();
+    let mut e = Engine::new(&mut fonts, PageSetup::A4, 18.0);
+    for slide in &deck.slides {
+        e.slide_page(deck.width_pt, deck.height_pt, Some(slide.background.unwrap_or([255, 255, 255])));
+        for shape in &slide.shapes {
+            match shape {
+                Shape::Text { x, y, w, h, fill, line, paras, middle } => {
+                    if fill.is_some() || line.is_some() { e.put_rect(*x, *y, *w, *h, *fill, line.map(|c| (c, 0.75))); }
+                    e.put_text_box(paras, *x, *y, *w, *h, *middle);
+                }
+                Shape::Picture { x, y, w, h, image } => e.put_picture(image, *x, *y, *w, *h),
+                Shape::Table { x, y, w, table } => e.put_table(table, *x, *y, *w),
+            }
+        }
+    }
+    let layout = e.finish();
+    render(&layout, &fonts, title)
+}

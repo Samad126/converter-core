@@ -103,6 +103,30 @@ fn pdf_text(p: &Path) -> Option<String> {
     if let Some(t) = pdf_text(&p) { assert!(t.contains("Quoted, comma") && t.contains("2024-02-10"), "{t}"); }
 }
 
+#[tokio::test] async fn presentation_to_pdf_keeps_slide_size_and_order() {
+    let p = run("deck.pptx", "pdf").await;
+    let pages = pdf_pages(&p);
+    assert_eq!(pages.len(), 2);
+    // 28 cm x 15.75 cm
+    assert!((pages[0].0 - 793.7).abs() < 1.0 && (pages[0].1 - 446.46).abs() < 1.0, "{pages:?}");
+    if let Some(t) = pdf_text(&p) {
+        let (a, b) = (t.find("Roadmap 2025").expect("slide 1 title"), t.find("Second slide").expect("slide 2 title"));
+        assert!(a < b && t.contains("Launch the beta") && t.contains("Key result"), "{t}");
+    }
+    let txt = std::fs::read_to_string(run("deck.pptx", "txt").await).unwrap();
+    assert!(txt.contains("Collect feedback & iterate"), "{txt}");
+}
+
+#[test] fn pptx_reader_positions_and_colours() {
+    let deck = native::read::pptx::read(std::io::Cursor::new(std::fs::read(fixture("deck.pptx")).unwrap()), &Config::default()).unwrap();
+    assert_eq!(deck.slides.len(), 2);
+    assert!((deck.width_pt - 793.7).abs() < 1.0);
+    assert_eq!(deck.slides[0].background, Some([0xf2, 0xf2, 0xf2]));
+    let converter_core::native::model::Shape::Text { x, y, fill, .. } = &deck.slides[0].shapes[0] else { panic!("first shape is text") };
+    assert!((x - 56.69).abs() < 0.5 && (y - 28.35).abs() < 0.5, "{x} {y}");
+    assert_eq!(*fill, Some([0x72, 0x9f, 0xcf]));
+}
+
 #[tokio::test] async fn embedded_pictures_and_links_survive_in_pdf_html_and_epub() {
     let pdf = run("pic.docx", "pdf").await;
     let doc = lopdf::Document::load(&pdf).unwrap();

@@ -15,11 +15,13 @@ use model::Content;
 use std::path::{Path, PathBuf};
 
 const WORD: &[&str] = &[".docx", ".docm", ".dotx"];
+const SLIDES: &[&str] = &[".pptx", ".pptm", ".ppsx", ".potx"];
 const SHEET: &[&str] = &[".xlsx", ".xlsm", ".xls", ".ods"];
 
 /// `(source extensions, target ids)` this module can convert. A source never lists itself as a target.
 const PAIRS: &[(&[&str], &[&str])] = &[
     (WORD, &["txt", "html", "markdown", "epub", "pdf"]),
+    (SLIDES, &["pdf", "txt", "html", "markdown"]),
     (SHEET, &["csv", "tsv", "json", "html", "xlsx", "ods", "pdf"]),
 ];
 
@@ -39,6 +41,10 @@ fn read(ctx: &Ctx<'_>, ext: &str) -> Result<Content> {
         let f = std::fs::File::open(&ctx.input)?;
         return read::docx::read(std::io::BufReader::new(f), ctx.cfg).map(Content::Doc);
     }
+    if SLIDES.contains(&ext) {
+        let f = std::fs::File::open(&ctx.input)?;
+        return read::pptx::read(std::io::BufReader::new(f), ctx.cfg).map(Content::Deck);
+    }
     if SHEET.contains(&ext) { return read::sheet::read(&ctx.input, ctx.cfg).map(Content::Book); }
     Err(Error::new(ErrorCode::EUnsupported, format!("No built-in reader for \"{ext}\".")))
 }
@@ -53,7 +59,7 @@ fn write(content: Content, target: &str, out: &Path) -> Result<()> {
             let bytes = match content {
                 Content::Doc(d) => write::pdf::doc_to_pdf(&d, "Document")?,
                 Content::Book(b) => write::pdf::book_to_pdf(&b, "Workbook")?,
-                Content::Deck(_) => return Err(Error::new(ErrorCode::EUnsupported, "Presentations are not supported by the built-in converters yet.")),
+                Content::Deck(k) => write::pdf::deck_to_pdf(&k, "Presentation")?,
             };
             std::fs::write(out, bytes)?
         }
