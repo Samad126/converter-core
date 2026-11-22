@@ -56,5 +56,5 @@ list in `data/engines.json` (url, sha256, size per platform). Lookup order: `CON
 downloaded copy -> `PATH`. Downloaded today: pandoc, qpdf, 7zip, yt-dlp, ffmpeg, and LibreOffice on Windows (MSI, extracted with
 `msiexec /a`, no admin rights) and macOS (DMG, copied out with `ditto`), and Calibre on all three (tarball / MSI / DMG). CI installs both
 for real and converts a document / an ebook with that copy. Calibre on Linux also needs a few system libraries
-(`libegl1 libopengl0 libxcb-cursor0 libxkbcommon0`); the app says so instead of showing a traceback. Not yet
-downloadable (use a package manager): LibreOffice on Linux, Tesseract, heif, assimp, Python packages.
+(`libegl1 libopengl0 libxcb-cursor0 libxkbcommon0`); the app says so instead of showing a traceback. The Python tools are a downloadable engine too. Not yet
+downloadable (use a package manager): LibreOffice on Linux, Tesseract, heif, assimp.
