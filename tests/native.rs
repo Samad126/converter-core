@@ -71,3 +71,45 @@ fn zip_names(p: &Path) -> Vec<String> {
     }
 }
 
+fn pdf_pages(p: &Path) -> Vec<(f32, f32)> {
+    let doc = lopdf::Document::load(p).expect("output is a readable PDF");
+    doc.get_pages().values().map(|id| {
+        let page = doc.get_dictionary(*id).unwrap();
+        let mb = page.get(b"MediaBox").unwrap().as_array().unwrap();
+        let n = |i: usize| mb[i].as_float().unwrap();
+        (n(2) - n(0), n(3) - n(1))
+    }).collect()
+}
+
+/// Text as `pdftotext` sees it (skipped quietly when poppler is not installed).
+fn pdf_text(p: &Path) -> Option<String> {
+    let out = std::process::Command::new("pdftotext").arg("-layout").arg(p).arg("-").output().ok()?;
+    out.status.success().then(|| String::from_utf8_lossy(&out.stdout).into_owned())
+}
+
+#[tokio::test] async fn word_to_pdf_without_libreoffice() {
+    let p = run("sample.docx", "pdf").await;
+    assert!(std::fs::read(&p).unwrap().starts_with(b"%PDF"));
+    let pages = pdf_pages(&p);
+    assert_eq!(pages.len(), 1);
+    if let Some(t) = pdf_text(&p) {
+        for needle in ["Quarterly Report", "bold", "Step two", "Apples", "7.5", "한국어"] { assert!(t.contains(needle), "{needle:?} missing from:\n{t}"); }
+    }
+}
+
+#[tokio::test] async fn spreadsheet_to_pdf_without_libreoffice() {
+    let p = run("sample.xlsx", "pdf").await;
+    assert_eq!(pdf_pages(&p).len(), 1);
+    if let Some(t) = pdf_text(&p) { assert!(t.contains("Quoted, comma") && t.contains("2024-02-10"), "{t}"); }
+}
+
+#[tokio::test] async fn embedded_pictures_and_links_survive_in_pdf_html_and_epub() {
+    let pdf = run("pic.docx", "pdf").await;
+    let doc = lopdf::Document::load(&pdf).unwrap();
+    let images = doc.objects.values().filter(|o| o.as_stream().ok().is_some_and(|s| s.dict.get(b"Subtype").ok().and_then(|v| v.as_name().ok()) == Some(b"Image"))).count();
+    assert!(images >= 1, "the picture is embedded");
+    let links = doc.objects.values().filter(|o| o.as_dict().ok().is_some_and(|d| d.get(b"Subtype").ok().and_then(|v| v.as_name().ok()) == Some(b"Link"))).count();
+    assert_eq!(links, 1, "the hyperlink becomes a link annotation");
+    assert!(std::fs::read_to_string(run("pic.docx", "html").await).unwrap().contains("data:image/png;base64,"));
+    assert!(zip_names(&run("pic.docx", "epub").await).iter().any(|n| n == "OEBPS/images/img1.png"));
+}

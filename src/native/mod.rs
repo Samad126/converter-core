@@ -3,6 +3,8 @@
 //! Two roles: pairs only this module can do (`Engine::Native`), and a fallback for pairs an engine would normally
 //! do (LibreOffice, pandoc, ...) when that engine is not installed. The engine wins when it is installed, because
 //! it is the higher-fidelity route.
+pub mod fonts;
+pub mod layout;
 pub mod model;
 pub mod read;
 pub mod util;
@@ -17,8 +19,8 @@ const SHEET: &[&str] = &[".xlsx", ".xlsm", ".xls", ".ods"];
 
 /// `(source extensions, target ids)` this module can convert. A source never lists itself as a target.
 const PAIRS: &[(&[&str], &[&str])] = &[
-    (WORD, &["txt", "html", "markdown", "epub"]),
-    (SHEET, &["csv", "tsv", "json", "html", "xlsx", "ods"]),
+    (WORD, &["txt", "html", "markdown", "epub", "pdf"]),
+    (SHEET, &["csv", "tsv", "json", "html", "xlsx", "ods", "pdf"]),
 ];
 
 pub fn supports(ext: &str, target: &str) -> bool {
@@ -47,6 +49,14 @@ fn write(content: Content, target: &str, out: &Path) -> Result<()> {
         "txt" => std::fs::write(out, text::to_txt(&content.into_doc()))?,
         "markdown" => std::fs::write(out, text::to_markdown(&content.into_doc()))?,
         "html" => std::fs::write(out, html::to_html(&content.into_doc(), "Document"))?,
+        "pdf" => {
+            let bytes = match content {
+                Content::Doc(d) => write::pdf::doc_to_pdf(&d, "Document")?,
+                Content::Book(b) => write::pdf::book_to_pdf(&b, "Workbook")?,
+                Content::Deck(_) => return Err(Error::new(ErrorCode::EUnsupported, "Presentations are not supported by the built-in converters yet.")),
+            };
+            std::fs::write(out, bytes)?
+        }
         "epub" => epub::to_epub(&content.into_doc(), "Document", out)?,
         "csv" => sheet::delimited(&content.into_book(), ',', out)?,
         "tsv" => sheet::delimited(&content.into_book(), '\t', out)?,
