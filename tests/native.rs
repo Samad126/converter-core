@@ -93,7 +93,10 @@ fn pdf_text(p: &Path) -> Option<String> {
     let pages = pdf_pages(&p);
     assert_eq!(pages.len(), 1);
     if let Some(t) = pdf_text(&p) {
-        for needle in ["Quarterly Report", "bold", "Step two", "Apples", "7.5", "한국어"] { assert!(t.contains(needle), "{needle:?} missing from:\n{t}"); }
+        for needle in ["Quarterly Report", "bold", "Step two", "Apples", "7.5"] { assert!(t.contains(needle), "{needle:?} missing from:\n{t}"); }
+        // Korean needs a system CJK font; only check it where the machine has one that draws the glyphs.
+        let mut fonts = converter_core::native::fonts::FontSet::new();
+        if fonts.pick('한', false, false, false) >= 8 && fonts.pick('국', false, false, false) >= 8 { let (a, b, c) = (fonts.pick('한', false, false, false), fonts.pick('국', false, false, false), fonts.pick('어', false, false, false)); assert!(t.contains("한국어"), "한국어 missing (fonts: 한={} 국={} 어={}) from:\n{t}", fonts.face_name(a), fonts.face_name(b), fonts.face_name(c)); }
     }
 }
 

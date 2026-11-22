@@ -79,6 +79,12 @@ impl FontSet {
 
     fn system_face(&mut self, c: char) -> Option<usize> {
         if let Some(v) = self.system_pick.get(&c) { return *v; }
+        // Keep a script in one font where possible: a system face loaded for an earlier character that can also draw
+        // this one (with a visible glyph) wins over scanning again.
+        for i in SYMBOL_BASE + 2..self.faces.len() {
+            let ok = { let f = &self.faces[i]; ttf_parser::Face::parse(&f.data, f.index).ok().is_some_and(|t| t.glyph_index(c).and_then(|g| t.glyph_bounding_box(g)).is_some()) };
+            if ok { self.system_pick.insert(c, Some(i)); return Some(i); }
+        }
         let db = self.system.get_or_insert_with(|| { let mut d = fontdb::Database::new(); d.load_system_fonts(); d });
         // Faces that cover a lot of scripts first, so one font tends to serve a whole run of CJK text.
         let score = |name: &str| {
@@ -91,7 +97,7 @@ impl FontSet {
             if info.monospaced || info.style != fontdb::Style::Normal { continue; }
             let s = info.families.first().map(|f| score(&f.0)).unwrap_or(2);
             if best.as_ref().is_some_and(|b| b.0 <= s) { continue; }
-            let has = db.with_face_data(info.id, |data, idx| ttf_parser::Face::parse(data, idx).ok().is_some_and(|f| f.glyph_index(c).is_some())).unwrap_or(false);
+            let has = db.with_face_data(info.id, |data, idx| ttf_parser::Face::parse(data, idx).ok().is_some_and(|f| f.glyph_index(c).and_then(|g| f.glyph_bounding_box(g)).is_some())).unwrap_or(false);
             if has { best = Some((s, info.id, info.index)); if s == 0 { break; } }
         }
         let picked = best.and_then(|(_, id, index)| {
@@ -104,6 +110,14 @@ impl FontSet {
         });
         self.system_pick.insert(c, picked);
         picked
+    }
+
+    /// Family name of a loaded face (for diagnostics).
+    pub fn face_name(&self, idx: usize) -> String {
+        let f = &self.faces[idx];
+        ttf_parser::Face::parse(&f.data, f.index).ok()
+            .and_then(|t| t.names().into_iter().find(|n| n.name_id == ttf_parser::name_id::FULL_NAME).and_then(|n| n.to_string()))
+            .unwrap_or_else(|| format!("face {idx}"))
     }
 
     /// Width of `text` in em, split into `(face, substring)` runs by which face draws each character.
