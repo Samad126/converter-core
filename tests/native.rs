@@ -346,3 +346,27 @@ fn words(s: &str) -> std::collections::BTreeMap<String, usize> {
     std::fs::write(&garbage, b"not a zip").unwrap();
     assert_eq!(try_run_path(&garbage, "txt").await.unwrap_err().code, converter_core::ErrorCode::EConvertFailed);
 }
+
+// ---- ODT / HTML / MHT ----------------------------------------------------------------------------------------
+
+#[tokio::test] async fn libreoffice_made_odt_keeps_structure_and_pictures() {
+    let md = std::fs::read_to_string(run_path(&fixture("sample.odt"), "markdown").await.remove(0)).unwrap();
+    for needle in ["Quarterly Report", "## Highlights", "- First point", "1. Step one", "| Apples | 12 |", "**bold**", "[link](https://example.com"] { assert!(md.contains(needle), "{needle:?} missing:\n{md}"); }
+    assert!(md.starts_with("# Quarterly Report"), "a Title-styled paragraph is a heading:\n{md}");
+    let epub = run_path(&fixture("pic.odt"), "epub").await.remove(0);
+    assert!(zip_names(&epub).iter().any(|n| n.starts_with("OEBPS/images/")), "the picture is packaged");
+    let pdf = run_path(&fixture("sample.odt"), "pdf").await.remove(0);
+    assert!((pdf_pages(&pdf)[0].0 - 595.3).abs() < 1.0, "page size comes from the ODT page layout");
+}
+
+#[tokio::test] async fn html_becomes_documents_without_a_browser_or_office() {
+    let md = std::fs::read_to_string(run_path(&fixture("sample.html"), "markdown").await.remove(0)).unwrap();
+    for needle in ["# Quarterly Report", "**bold**", "*italic*", "[link](https://example.com/?a=1&b=2)", "## Highlights", "- First point", "  - Nested", "1. Step one", "| Apples | 12 |", "`code  block", "한국어"] {
+        assert!(md.contains(needle), "{needle:?} missing:\n{md}");
+    }
+    assert!(!md.contains("color: red"), "style blocks are not text");
+    let docx = run_path(&fixture("sample.html"), "docx").await.remove(0);
+    let doc = native::read::docx::read(std::io::BufReader::new(std::fs::File::open(&docx).unwrap()), &Config::default()).unwrap();
+    assert_eq!(doc.tables().len(), 1);
+    assert!(!pdf_pages(&run_path(&fixture("sample.html"), "pdf").await.remove(0)).is_empty());
+}

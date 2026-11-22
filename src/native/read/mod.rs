@@ -1,5 +1,8 @@
 //! Built-in readers: open a file's own bytes and produce the neutral model.
 pub mod docx;
+pub mod html;
+pub mod mht;
+pub mod odt;
 pub mod hwp;
 pub mod hwpx;
 pub mod pdf_text;

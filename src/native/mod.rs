@@ -17,8 +17,11 @@ use std::path::{Path, PathBuf};
 
 const WORD: &[&str] = &[".docx", ".docm", ".dotx"];
 const SLIDES: &[&str] = &[".pptx", ".pptm", ".ppsx", ".potx"];
+const ODT: &[&str] = &[".odt"];
+const HTML: &[&str] = &[".html", ".htm"];
 const HWP: &[&str] = &[".hwp"];
 const HWPX: &[&str] = &[".hwpx"];
+const MHT: &[&str] = &[".mht", ".mhtml"];
 const SHEET: &[&str] = &[".xlsx", ".xlsm", ".xls", ".ods"];
 
 /// `(source extensions, target ids)` this module can convert. A source never lists itself as a target.
@@ -29,6 +32,9 @@ const PAIRS: &[(&[&str], &[&str])] = &[
     (SHEET, &["csv", "tsv", "json", "html", "xlsx", "ods", "pdf", "png", "jpg", "hwpx"]),
     (HWP, &["pdf", "txt", "html", "markdown", "epub", "docx", "hwpx", "xlsx", "png", "jpg"]),
     (HWPX, &["pdf", "txt", "html", "markdown", "epub", "docx", "xlsx", "png", "jpg"]),
+    (ODT, &["pdf", "txt", "html", "markdown", "epub", "docx", "hwpx", "png", "jpg"]),
+    (HTML, &["pdf", "txt", "markdown", "epub", "docx", "hwpx", "png", "jpg"]),
+    (MHT, &["pdf", "txt", "html", "markdown", "epub", "docx", "hwpx", "xlsx", "png", "jpg"]),
 ];
 
 pub fn supports(ext: &str, target: &str) -> bool {
@@ -51,6 +57,16 @@ fn read(ctx: &Ctx<'_>, ext: &str) -> Result<Content> {
         let f = std::fs::File::open(&ctx.input)?;
         return read::pptx::read(std::io::BufReader::new(f), ctx.cfg).map(Content::Deck);
     }
+    if ODT.contains(&ext) {
+        let f = std::fs::File::open(&ctx.input)?;
+        return read::odt::read(std::io::BufReader::new(f), ctx.cfg).map(Content::Doc);
+    }
+    if HTML.contains(&ext) {
+        let bytes = std::fs::read(&ctx.input)?;
+        let text = String::from_utf8(bytes).unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned());
+        return Ok(Content::Doc(read::html::parse(&text, &|_| None)));
+    }
+    if MHT.contains(&ext) { return read::mht::read(&std::fs::read(&ctx.input)?).map(Content::Doc); }
     if HWP.contains(&ext) {
         let f = std::fs::File::open(&ctx.input)?;
         return read::hwp::read(std::io::BufReader::new(f), ctx.cfg).map(Content::Doc);
