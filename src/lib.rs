@@ -8,6 +8,7 @@ pub mod error;
 pub mod extract;
 pub mod formats;
 pub mod media;
+pub mod native;
 pub mod pdf;
 pub mod pdf_cli;
 pub mod pipelines;

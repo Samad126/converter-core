@@ -58,12 +58,16 @@ pub struct Matrix {
     pub targets: BTreeMap<String, TargetFormat>,
     pub sources: BTreeMap<String, SourceFormat>,
     pub media: BTreeMap<String, MediaFormat>,
+    /// Pairs added on top of the generated matrix that only the built-in converters can do.
+    pub native_only: std::collections::HashSet<(String, String)>,
 }
 
 /// Which route produces a source/target pair.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Engine {
     Soffice, Extract, PdfEngine, Pandoc, Archive, Ffmpeg, Data, Heif, Assimp, Ebook, Font, Email,
+    /// Pure Rust, no external program (see `crate::native`).
+    Native,
 }
 
 #[derive(Debug, Clone)]
@@ -81,7 +85,14 @@ pub fn matrix() -> &'static Matrix {
     MATRIX.get_or_init(|| {
         let raw: Raw = serde_json::from_str(include_str!("../../data/formats.json"))
             .expect("data/formats.json is valid");
-        Matrix { targets: raw.targets, sources: raw.sources, media: raw.media }
+        let mut m = Matrix { targets: raw.targets, sources: raw.sources, media: raw.media, native_only: Default::default() };
+        for (ext, target) in crate::native::all_pairs() {
+            let Some(src) = m.sources.get_mut(ext) else { continue };
+            if !m.targets.contains_key(target) || src.targets.iter().any(|t| t == target) { continue; }
+            src.targets.push(target.to_string());
+            m.native_only.insert((ext.to_string(), target.to_string()));
+        }
+        m
     })
 }
 
@@ -125,6 +136,7 @@ pub fn resolve_conversion(ext: &str, target_id: &str) -> Option<Resolved> {
         source: source.clone(), target: target.clone(), convert_to, engine,
     });
 
+    if m.native_only.contains(&(ext.to_string(), target_id.to_string())) { return mk(Engine::Native, String::new()); }
     for (key, engine) in [
         ("pdf", Engine::PdfEngine), ("pandoc", Engine::Pandoc), ("data", Engine::Data),
         ("ebook", Engine::Ebook), ("email", Engine::Email),

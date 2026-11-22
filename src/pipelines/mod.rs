@@ -37,9 +37,27 @@ impl Ctx<'_> {
     }
 }
 
+/// The tool to offer installing: set only when it is missing AND the built-in converters cannot do the pair.
+pub fn missing_tool(cfg: &Config, conv: &Resolved) -> Option<&'static str> {
+    let name = required_tool_for(conv)?;
+    let tool = engines::tool(name)?;
+    if engines::resolve(tool, cfg, None).is_some() || crate::native::supports(&conv.source.extension, &conv.target.id) { return None; }
+    Some(tool.name)
+}
+
+/// The installed engine is preferred (better fidelity); the built-in route only steps in when it is absent.
+fn native_fallback(ctx: &Ctx<'_>, conv: &Resolved) -> bool {
+    if conv.engine == Engine::Native { return true; }
+    let Some(name) = required_tool_for(conv) else { return false };
+    let Some(tool) = engines::tool(name) else { return false };
+    crate::native::supports(&conv.source.extension, &conv.target.id) && engines::resolve(tool, ctx.cfg, None).is_none()
+}
+
 pub async fn run(ctx: &Ctx<'_>, conv: &Resolved) -> Result<Vec<PathBuf>> {
     tokio::fs::create_dir_all(&ctx.out_dir).await?;
+    if native_fallback(ctx, conv) { return crate::native::run(ctx, conv).await; }
     match conv.engine {
+        Engine::Native => crate::native::run(ctx, conv).await,
         Engine::Soffice if conv.target.mode == "raster" => office::raster(ctx, conv).await,
         Engine::Soffice => office::direct(ctx, conv).await,
         Engine::Archive => archive::run(ctx, conv).await,
@@ -85,5 +103,12 @@ mod tests {
         assert_eq!(required_tool_for(&resolve_conversion(".png", "avif").unwrap()), Some("ffmpeg"));
         assert_eq!(required_tool_for(&resolve_conversion(".docx", "pdf").unwrap()), Some("libreoffice"));
         assert_eq!(required_tool_for(&resolve_conversion(".csv", "json").unwrap()), None);
+    }
+    #[test] fn built_in_converters_remove_the_install_prompt() {
+        let cfg = Config { engines_dir: std::env::temp_dir().join("no-engines-here"), ..Config::default() };
+        // Only meaningful when the machine has no LibreOffice: the check is "missing AND no built-in route".
+        let conv = resolve_conversion(".docx", "markdown").unwrap();
+        assert_eq!(conv.engine, Engine::Native);
+        assert_eq!(missing_tool(&cfg, &conv), None);
     }
 }

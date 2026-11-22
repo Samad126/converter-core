@@ -22,7 +22,7 @@ fn tabular(v: &Value) -> Option<&Vec<Value>> {
     v.as_array().filter(|a| a.iter().all(is_flat_record))
 }
 
-fn table_to_records(rows: Vec<Vec<String>>) -> Value {
+pub(crate) fn table_to_records(rows: Vec<Vec<String>>) -> Value {
     let mut it = rows.into_iter();
     let Some(header) = it.next() else { return Value::Array(vec![]) };
     Value::Array(it.map(|row| {

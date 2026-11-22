@@ -144,6 +144,6 @@ pub fn required_tool(engine: crate::formats::Engine) -> Option<&'static str> {
     match engine {
         Soffice => Some("libreoffice"), Pandoc => Some("pandoc"), Archive => Some("7zip"),
         Ffmpeg => Some("ffmpeg"), Heif => Some("heif"), Assimp => Some("assimp"), Ebook => Some("calibre"),
-        PdfEngine | Font => Some("python"), Extract | Data | Email => None,
+        PdfEngine | Font => Some("python"), Extract | Data | Email | Native => None,
     }
 }
