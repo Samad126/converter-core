@@ -324,6 +324,51 @@
         "sqlite",
         "jsonl"
       ]
+    },
+    ".eot": {
+      "extension": ".eot",
+      "mediaType": "application/vnd.ms-fontobject",
+      "targets": [
+        "ttf",
+        "otf",
+        "woff"
+      ]
+    },
+    ".lz4": {
+      "extension": ".lz4",
+      "mediaType": "application/x-lz4",
+      "targets": [
+        "zip",
+        "tar",
+        "tar.gz",
+        "cbz"
+      ]
+    },
+    ".lzma": {
+      "extension": ".lzma",
+      "mediaType": "application/x-lzma",
+      "viaEngine": true,
+      "targets": [
+        "zip",
+        "tar",
+        "tar.gz",
+        "tar.bz2",
+        "7z",
+        "cbz"
+      ]
+    },
+    ".zipx": {
+      "extension": ".zipx",
+      "mediaType": "application/zip",
+      "viaEngine": true,
+      "targets": [
+        "zip",
+        "tar",
+        "tar.gz",
+        "tar.bz2",
+        "7z",
+        "cbz"
+      ]
     }
   },
   "media": {}

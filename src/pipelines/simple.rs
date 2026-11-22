@@ -54,7 +54,7 @@ pub async fn pandoc(ctx: &Ctx<'_>, conv: &Resolved) -> Result<Vec<PathBuf>> {
 }
 
 fn clone_ctx<'a>(c: &Ctx<'a>) -> Ctx<'a> {
-    Ctx { cfg: c.cfg, workspace: c.workspace.clone(), input: c.input.clone(), out_dir: c.out_dir.clone(),
+    Ctx { cfg: c.cfg, name: c.name.clone(), workspace: c.workspace.clone(), input: c.input.clone(), out_dir: c.out_dir.clone(),
           profile_dir: c.profile_dir.clone(), timeout: c.timeout, ocr: c.ocr }
 }
 

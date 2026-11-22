@@ -44,6 +44,7 @@ pub async fn convert_file(cfg: &Config, input: &Path, target: &str, opts: Conver
     tokio::fs::copy(input, &work_input).await?;
     let ctx = pipelines::Ctx {
         cfg,
+        name: input.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default(),
         workspace: ws.path().to_path_buf(),
         input: work_input,
         out_dir: ws.path().join("out"),

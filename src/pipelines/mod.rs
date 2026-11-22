@@ -1,5 +1,5 @@
 //! Conversion routes. Each returns the files it produced, on disk in `ctx.out_dir`.
-mod archive;
+pub(crate) mod archive;
 mod data;
 mod email;
 mod extract;
@@ -23,6 +23,8 @@ pub fn required_tool_for(conv: &Resolved) -> Option<&'static str> {
 
 pub struct Ctx<'a> {
     pub cfg: &'a Config,
+    /// The file name the user gave (the workspace copy is called `input.<ext>`).
+    pub name: String,
     pub workspace: PathBuf,
     pub input: PathBuf,
     pub out_dir: PathBuf,

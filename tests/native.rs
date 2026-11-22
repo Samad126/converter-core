@@ -13,7 +13,7 @@ async fn run(src: &str, target: &str) -> PathBuf {
     std::fs::create_dir_all(&out_dir).unwrap();
     let input = ws.join(format!("input{ext}"));
     std::fs::copy(fixture(src), &input).unwrap();
-    let ctx = Ctx { cfg: &cfg, workspace: ws.clone(), input, out_dir, profile_dir: ws.join("p"), timeout: cfg.convert_timeout, ocr: false };
+    let ctx = Ctx { cfg: &cfg, name: src.to_string(), workspace: ws.clone(), input, out_dir, profile_dir: ws.join("p"), timeout: cfg.convert_timeout, ocr: false };
     native::run(&ctx, &conv).await.unwrap().remove(0)
 }
 
@@ -164,7 +164,7 @@ async fn run_path(src: &Path, target: &str) -> Vec<PathBuf> {
     std::fs::create_dir_all(&out_dir).unwrap();
     let input = ws.join(format!("input{ext}"));
     std::fs::copy(src, &input).unwrap();
-    let ctx = Ctx { cfg: &cfg, workspace: ws.clone(), input, out_dir, profile_dir: ws.join("p"), timeout: cfg.convert_timeout, ocr: false };
+    let ctx = Ctx { cfg: &cfg, name: src.file_name().unwrap().to_string_lossy().into_owned(), workspace: ws.clone(), input, out_dir, profile_dir: ws.join("p"), timeout: cfg.convert_timeout, ocr: false };
     native::run(&ctx, &conv).await.unwrap()
 }
 
@@ -224,7 +224,7 @@ async fn try_run_path(src: &Path, target: &str) -> converter_core::Result<Vec<Pa
     std::fs::create_dir_all(&out_dir).unwrap();
     let input = ws.join(format!("input{ext}"));
     std::fs::copy(src, &input).unwrap();
-    let ctx = Ctx { cfg: &cfg, workspace: ws.clone(), input, out_dir, profile_dir: ws.join("p"), timeout: cfg.convert_timeout, ocr: false };
+    let ctx = Ctx { cfg: &cfg, name: src.file_name().unwrap().to_string_lossy().into_owned(), workspace: ws.clone(), input, out_dir, profile_dir: ws.join("p"), timeout: cfg.convert_timeout, ocr: false };
     native::run(&ctx, &conv).await
 }
 
@@ -412,9 +412,43 @@ fn words(s: &str) -> std::collections::BTreeMap<String, usize> {
     use apache_avro::{types::Value, Schema, Writer};
     let schema = Schema::parse_str(r#"{"type":"record","name":"t","fields":[{"name":"name","type":"string"},{"name":"qty","type":"int"}]}"#).unwrap();
     let mut w = Writer::new(&schema, Vec::new()).unwrap();
-    for (n, q) in [("Apples", 12), ("Pears", 7)] { w.append(Value::Record(vec![("name".into(), Value::String(n.into())), ("qty".into(), Value::Int(q))])).unwrap(); }
+    for (n, q) in [("Apples", 12), ("Pears", 7)] { w.append_value(Value::Record(vec![("name".into(), Value::String(n.into())), ("qty".into(), Value::Int(q))])).unwrap(); }
     let av = dir.join("rows.avro");
     std::fs::write(&av, w.into_inner().unwrap()).unwrap();
     let json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(run_path(&av, "json").await.remove(0)).unwrap()).unwrap();
     assert_eq!(json, serde_json::json!([{"name": "Apples", "qty": 12}, {"name": "Pears", "qty": 7}]));
+}
+
+// ---- archives and fonts --------------------------------------------------------------------------------------
+
+#[tokio::test] async fn archives_convert_without_7zip_and_keep_their_files() {
+    let dir = std::env::temp_dir().join(format!("arch-it-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let zip_path = dir.join("bundle.zip");
+    {
+        let mut z = zip::ZipWriter::new(std::fs::File::create(&zip_path).unwrap());
+        for (n, d) in [("a.txt", &b"alpha"[..]), ("sub/b.txt", b"beta")] { z.start_file(n, zip::write::SimpleFileOptions::default()).unwrap(); std::io::Write::write_all(&mut z, d).unwrap(); }
+        z.finish().unwrap();
+    }
+    let tgz = run_path(&zip_path, "tar.gz").await.remove(0);
+    let back = run_path(&tgz.clone(), "zip").await.remove(0);
+    let mut z = zip::ZipArchive::new(std::fs::File::open(&back).unwrap()).unwrap();
+    let mut s = String::new(); std::io::Read::read_to_string(&mut z.by_name("sub/b.txt").unwrap(), &mut s).unwrap();
+    assert_eq!(s, "beta");
+    // .lz4 is a new source, and a named single stream keeps its name.
+    let lz4 = dir.join("notes.txt.lz4");
+    { let mut e = lz4_flex::frame::FrameEncoder::new(std::fs::File::create(&lz4).unwrap()); std::io::Write::write_all(&mut e, b"lz4 payload").unwrap(); e.finish().unwrap(); }
+    let out = run_path(&lz4, "zip").await.remove(0);
+    assert_eq!(zip_names(&out), vec!["notes.txt"]);
+}
+
+#[tokio::test] async fn web_fonts_convert_between_ttf_woff_and_eot() {
+    let ttf = Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/fonts/LiberationMono-Regular.ttf");
+    let woff = run_path(&ttf, "woff").await.remove(0);
+    assert!(std::fs::read(&woff).unwrap().starts_with(b"wOFF"));
+    let back = run_path(&woff, "ttf").await.remove(0);
+    let face_bytes = std::fs::read(&back).unwrap();
+    assert!(ttf_parser::Face::parse(&face_bytes, 0).unwrap().glyph_index('A').is_some());
+    let err = try_run_path(&ttf, "woff").await;
+    assert!(err.is_ok());
 }

@@ -35,6 +35,9 @@ pub struct SourceFormat {
     #[serde(default)]
     pub import_filter: Option<String>,
     pub targets: Vec<String>,
+    /// Overlay sources only: the pairs go through an external engine (7-Zip, ...) instead of the built-in converters.
+    #[serde(default)]
+    pub via_engine: bool,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -92,7 +95,7 @@ pub fn matrix() -> &'static Matrix {
         m.media.extend(extra.media);
         for (ext, src) in extra.sources {
             // A source without a document family has no engine route: every pair it lists is built-in only.
-            if src.family.is_none() { for t in &src.targets { m.native_only.insert((ext.clone(), t.clone())); } }
+            if src.family.is_none() && !src.via_engine { for t in &src.targets { m.native_only.insert((ext.clone(), t.clone())); } }
             m.sources.insert(ext, src);
         }
         for (ext, target) in crate::native::all_pairs() {
@@ -183,7 +186,7 @@ mod tests {
     fn matrix_loads_with_expected_sizes() {
         let m = matrix();
         assert_eq!(m.targets.len(), 79);
-        assert_eq!(m.sources.len(), 127);
+        assert_eq!(m.sources.len(), 131);
         assert_eq!(m.media.len(), 28);
     }
 

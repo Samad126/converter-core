@@ -3,6 +3,8 @@
 //! Two roles: pairs only this module can do (`Engine::Native`), and a fallback for pairs an engine would normally
 //! do (LibreOffice, pandoc, ...) when that engine is not installed. The engine wins when it is installed, because
 //! it is the higher-fidelity route.
+pub mod archive;
+pub mod font;
 pub mod fonts;
 pub mod layout;
 pub mod model;
@@ -23,6 +25,8 @@ const FODT: &[&str] = &[".fodt"];
 const HTML: &[&str] = &[".html", ".htm"];
 const SUBS: &[&str] = subs::EXTENSIONS;
 const DATA: &[&str] = &[".ndjson", ".avro"];
+const FONTS: &[&str] = &[".ttf", ".otf", ".woff", ".eot"];
+const ARCHIVES: &[&str] = &[".zip", ".cbz", ".tar", ".tgz", ".gz", ".xz", ".txz", ".lzma", ".lz4", ".zipx"];
 const HWP: &[&str] = &[".hwp"];
 const HWPX: &[&str] = &[".hwpx"];
 const MHT: &[&str] = &[".mht", ".mhtml"];
@@ -36,6 +40,10 @@ const PAIRS: &[(&[&str], &[&str])] = &[
     (SHEET, &["csv", "tsv", "json", "html", "xlsx", "ods", "pdf", "png", "jpg", "hwpx"]),
     (SUBS, &["srt", "vtt", "sbv", "lrc", "ass", "ssa"]),
     (DATA, &["csv", "tsv", "json", "jsonl", "yaml", "xml", "toml", "ini", "sqlite"]),
+    (&[".ttf", ".otf"], &["woff"]),
+    (&[".woff"], &["ttf", "otf"]),
+    (&[".eot"], &["ttf", "otf", "woff"]),
+    (ARCHIVES, &["zip", "tar", "tar.gz", "cbz"]),
     (HWP, &["pdf", "txt", "html", "markdown", "epub", "docx", "hwpx", "xlsx", "png", "jpg"]),
     (HWPX, &["pdf", "txt", "html", "markdown", "epub", "docx", "xlsx", "png", "jpg"]),
     (FODT, &["pdf", "txt", "html", "markdown", "epub", "docx", "hwpx", "png", "jpg"]),
@@ -181,6 +189,27 @@ pub async fn run(ctx: &Ctx<'_>, conv: &Resolved) -> Result<Vec<PathBuf>> {
             .await.map_err(|e| Error::new(ErrorCode::EInternal, e.to_string()))??;
         return Ok(vec![out]);
     }
+    if ARCHIVES.contains(&ext.as_str()) {
+        let (cfg, input, name) = (ctx.cfg.clone(), ctx.input.clone(), ctx.name.clone());
+        let (out, id) = (ctx.out_dir.join(format!("converted{}", target.extension)), target.id.clone());
+        let out2 = out.clone();
+        tokio::task::spawn_blocking(move || -> Result<()> {
+            // A single compressed stream keeps its name without the compression suffix ("notes.txt.gz" -> "notes.txt").
+            let stem = name.rsplit_once('.').map_or(name.as_str(), |(s, _)| s);
+            let stem = if stem.is_empty() { "file" } else { stem };
+            let un = archive::unpack(&ext, stem, &std::fs::read(&input)?, &cfg)?;
+            archive::pack(&id, &un.files, &out2)
+        }).await.map_err(|e| Error::new(ErrorCode::EInternal, e.to_string()))??;
+        return Ok(vec![out]);
+    }
+    if FONTS.contains(&ext.as_str()) {
+        let (input, out) = (ctx.input.clone(), ctx.out_dir.join(format!("converted{}", target.extension)));
+        let id = target.id.clone();
+        let out2 = out.clone();
+        tokio::task::spawn_blocking(move || -> Result<()> { std::fs::write(&out2, font::convert(&ext, &id, &std::fs::read(&input)?)?)?; Ok(()) })
+            .await.map_err(|e| Error::new(ErrorCode::EInternal, e.to_string()))??;
+        return Ok(vec![out]);
+    }
     if DATA.contains(&ext.as_str()) {
         let (input, out) = (ctx.input.clone(), ctx.out_dir.join(format!("converted{}", target.extension)));
         let id = target.id.clone();
@@ -195,7 +224,7 @@ pub async fn run(ctx: &Ctx<'_>, conv: &Resolved) -> Result<Vec<PathBuf>> {
         let (cfg, input, out_dir, id) = (ctx.cfg.clone(), ctx.input.clone(), ctx.out_dir.clone(), target.id.clone());
         return tokio::task::spawn_blocking(move || -> Result<Vec<PathBuf>> {
             let pdf = if ext == ".pdf" { std::fs::read(&input)? } else {
-                let c = Ctx { cfg: &cfg, workspace: PathBuf::new(), input, out_dir: PathBuf::new(), profile_dir: PathBuf::new(), timeout: Default::default(), ocr: false };
+                let c = Ctx { cfg: &cfg, name: String::new(), workspace: PathBuf::new(), input, out_dir: PathBuf::new(), profile_dir: PathBuf::new(), timeout: Default::default(), ocr: false };
                 pdf_bytes(read(&c, &ext)?)?
             };
             raster_pdf(&cfg, pdf, &id, &out_dir)
@@ -205,7 +234,7 @@ pub async fn run(ctx: &Ctx<'_>, conv: &Resolved) -> Result<Vec<PathBuf>> {
     let (cfg_ctx_input, out2) = (ctx.input.clone(), out.clone());
     let cfg = ctx.cfg.clone();
     tokio::task::spawn_blocking(move || -> Result<()> {
-        let c = Ctx { cfg: &cfg, workspace: PathBuf::new(), input: cfg_ctx_input, out_dir: PathBuf::new(), profile_dir: PathBuf::new(), timeout: Default::default(), ocr: false };
+        let c = Ctx { cfg: &cfg, name: String::new(), workspace: PathBuf::new(), input: cfg_ctx_input, out_dir: PathBuf::new(), profile_dir: PathBuf::new(), timeout: Default::default(), ocr: false };
         write(read(&c, &ext)?, &target.id, &out2)
     }).await.map_err(|e| Error::new(ErrorCode::EInternal, e.to_string()))??;
     Ok(vec![out])

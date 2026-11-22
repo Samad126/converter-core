@@ -110,3 +110,26 @@ async fn libreoffice_routes_for_the_extra_office_formats() {
         assert!(bytes.starts_with(magic) && !bytes.is_empty(), "{src} -> {target}");
     }
 }
+
+/// `.lzma` and `.zipx` are 7-Zip routes; checked against the real 7-Zip with files it wrote itself.
+#[tokio::test]
+async fn seven_zip_routes_for_lzma_and_zipx() {
+    if !have("7zip") { eprintln!("SKIP: 7zip not installed"); return; }
+    let d = tmp("7zx");
+    std::fs::write(d.join("payload.txt"), "hello 7z\n").unwrap();
+    let bin = engines::resolve(engines::tool("7zip").unwrap(), &cfg(), None).unwrap();
+    // .lzma written with liblzma (7-Zip cannot create it), .zipx written by 7-Zip (a zip using LZMA).
+    {
+        let opts = xz2::stream::LzmaOptions::new_preset(3).unwrap();
+        let stream = xz2::stream::Stream::new_lzma_encoder(&opts).unwrap();
+        let mut e = xz2::write::XzEncoder::new_stream(std::fs::File::create(d.join("a.lzma")).unwrap(), stream);
+        std::io::Write::write_all(&mut e, b"hello lzma\n").unwrap();
+        e.finish().unwrap();
+    }
+    let st = std::process::Command::new(&bin).args(["a", "-tzip", "-mm=LZMA"]).arg(d.join("b.zipx")).arg(d.join("payload.txt")).current_dir(&d).stdout(std::process::Stdio::null()).status().unwrap();
+    assert!(st.success(), "7z could not make b.zipx");
+    for name in ["a.lzma", "b.zipx"] {
+        let out = convert_file(&cfg(), &d.join(name), "zip", ConvertOptions::default()).await.unwrap_or_else(|e| panic!("{name}: {e:?}"));
+        assert!(std::fs::metadata(&out[0]).unwrap().len() > 20, "{name}");
+    }
+}
