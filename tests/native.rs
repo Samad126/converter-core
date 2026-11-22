@@ -370,3 +370,24 @@ fn words(s: &str) -> std::collections::BTreeMap<String, usize> {
     assert_eq!(doc.tables().len(), 1);
     assert!(!pdf_pages(&run_path(&fixture("sample.html"), "pdf").await.remove(0)).is_empty());
 }
+
+// ---- template, flat and binary variants ----------------------------------------------------------------------
+
+#[tokio::test] async fn template_and_flat_documents_read_like_their_plain_siblings() {
+    for src in ["sample.ott", "sample.fodt"] {
+        let md = std::fs::read_to_string(run_path(&fixture(src), "markdown").await.remove(0)).unwrap();
+        for needle in ["Quarterly Report", "## Highlights", "- First point", "| Apples | 12 |"] { assert!(md.contains(needle), "{src}: {needle:?} missing:\n{md}"); }
+    }
+    for src in ["sample.ots", "sample.xltx", "sample.fods"] {
+        if src == "sample.fods" { continue; } // flat spreadsheets go through LibreOffice
+        let csv = std::fs::read_to_string(run_path(&fixture(src), "csv").await.remove(0)).unwrap();
+        assert!(csv.contains("Apples,12,2024-01-05"), "{src}: {csv}");
+    }
+}
+
+#[tokio::test] async fn excel_binary_workbooks_are_read_without_excel_or_libreoffice() {
+    let csv = std::fs::read_to_string(run_path(&fixture("any_sheets.xlsb"), "csv").await.remove(0)).unwrap();
+    assert!(!csv.trim().is_empty());
+    let json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(run_path(&fixture("any_sheets.xlsb"), "json").await.remove(0)).unwrap()).unwrap();
+    assert!(json.is_object() || json.is_array(), "{json}");
+}

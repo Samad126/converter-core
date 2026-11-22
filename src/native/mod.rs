@@ -15,14 +15,15 @@ use crate::{formats::Resolved, pipelines::Ctx, Error, ErrorCode, Result};
 use model::Content;
 use std::path::{Path, PathBuf};
 
-const WORD: &[&str] = &[".docx", ".docm", ".dotx"];
+const WORD: &[&str] = &[".docx", ".docm", ".dotx", ".dotm"];
 const SLIDES: &[&str] = &[".pptx", ".pptm", ".ppsx", ".potx"];
-const ODT: &[&str] = &[".odt"];
+const ODT: &[&str] = &[".odt", ".ott"];
+const FODT: &[&str] = &[".fodt"];
 const HTML: &[&str] = &[".html", ".htm"];
 const HWP: &[&str] = &[".hwp"];
 const HWPX: &[&str] = &[".hwpx"];
 const MHT: &[&str] = &[".mht", ".mhtml"];
-const SHEET: &[&str] = &[".xlsx", ".xlsm", ".xls", ".ods"];
+const SHEET: &[&str] = &[".xlsx", ".xlsm", ".xls", ".ods", ".xlsb", ".xltx", ".xlt", ".ots"];
 
 /// `(source extensions, target ids)` this module can convert. A source never lists itself as a target.
 const PAIRS: &[(&[&str], &[&str])] = &[
@@ -32,6 +33,7 @@ const PAIRS: &[(&[&str], &[&str])] = &[
     (SHEET, &["csv", "tsv", "json", "html", "xlsx", "ods", "pdf", "png", "jpg", "hwpx"]),
     (HWP, &["pdf", "txt", "html", "markdown", "epub", "docx", "hwpx", "xlsx", "png", "jpg"]),
     (HWPX, &["pdf", "txt", "html", "markdown", "epub", "docx", "xlsx", "png", "jpg"]),
+    (FODT, &["pdf", "txt", "html", "markdown", "epub", "docx", "hwpx", "png", "jpg"]),
     (ODT, &["pdf", "txt", "html", "markdown", "epub", "docx", "hwpx", "png", "jpg"]),
     (HTML, &["pdf", "txt", "markdown", "epub", "docx", "hwpx", "png", "jpg"]),
     (MHT, &["pdf", "txt", "html", "markdown", "epub", "docx", "hwpx", "xlsx", "png", "jpg"]),
@@ -76,7 +78,13 @@ fn read(ctx: &Ctx<'_>, ext: &str) -> Result<Content> {
         return read::hwpx::read(std::io::BufReader::new(f), ctx.cfg).map(Content::Doc);
     }
     if ext == ".pdf" { return read::pdf_text::read(std::fs::read(&ctx.input)?, ctx.cfg.max_raster_pages).map(Content::Doc); }
-    if SHEET.contains(&ext) { return read::sheet::read(&ctx.input, ctx.cfg).map(Content::Book); }
+    if FODT.contains(&ext) { return read::odt::read_flat(&std::fs::read(&ctx.input)?, ctx.cfg).map(Content::Doc); }
+    if SHEET.contains(&ext) {
+        // calamine picks its reader by file extension; templates are the same formats under another name.
+        let as_ext = match ext { ".xltx" => Some("xlsx"), ".xlt" => Some("xls"), ".ots" => Some("ods"), _ => None };
+        let path = match as_ext { Some(e) => { let p = ctx.input.with_extension(e); std::fs::copy(&ctx.input, &p)?; p } None => ctx.input.clone() };
+        return read::sheet::read(&path, ctx.cfg).map(Content::Book);
+    }
     Err(Error::new(ErrorCode::EUnsupported, format!("No built-in reader for \"{ext}\".")))
 }
 

@@ -95,3 +95,18 @@ async fn non_tabular_json_cannot_become_parquet() {
     let e = convert_file(&cfg(), &d.join("x.json"), "parquet", ConvertOptions::default()).await.unwrap_err();
     assert_eq!(e.code, ErrorCode::ENotTabular);
 }
+
+/// New LibreOffice-routed sources (templates, flat OpenDocument): the filter names are only trusted once a real file
+/// went through the real engine.
+#[tokio::test]
+async fn libreoffice_routes_for_the_extra_office_formats() {
+    if !have("libreoffice") { eprintln!("SKIP: libreoffice not installed"); return; }
+    let fx = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
+    let d = tmp("extras");
+    for (src, target, magic) in [("sample.fods", "csv", &b"name,qty"[..]), ("deck.otp", "pdf", b"%PDF"), ("sample.ott", "docx", b"PK"), ("sample.fodt", "pdf", b"%PDF"), ("sample.ots", "xlsx", b"PK"), ("sample.xltx", "pdf", b"%PDF"), ("any_sheets.xlsb", "csv", b""), ("wp6.wpd", "pdf", b"%PDF"), ("works.wps", "txt", b""), ("pages4.pages", "pdf", b"%PDF"), ("visio.vsdx", "pdf", b"%PDF"), ("visio.vsd", "pdf", b"%PDF")] {
+        std::fs::copy(fx.join(src), d.join(src)).unwrap();
+        let out = convert_file(&cfg(), &d.join(src), target, ConvertOptions::default()).await.unwrap_or_else(|e| panic!("{src} -> {target}: {e:?}"));
+        let bytes = std::fs::read(&out[0]).unwrap();
+        assert!(bytes.starts_with(magic) && !bytes.is_empty(), "{src} -> {target}");
+    }
+}

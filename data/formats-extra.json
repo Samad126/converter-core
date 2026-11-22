@@ -1,12 +1,262 @@
 {
   "targets": {
-    "hwpx": { "id": "hwpx", "extension": ".hwpx", "mediaType": "application/hwp+zip", "label": "HWPX", "mode": "direct", "multiple": false }
+    "hwpx": {
+      "id": "hwpx",
+      "extension": ".hwpx",
+      "mediaType": "application/hwp+zip",
+      "label": "HWPX",
+      "mode": "direct",
+      "multiple": false
+    }
   },
   "sources": {
-    ".hwp":   { "extension": ".hwp",   "mediaType": "application/x-hwp",   "targets": ["pdf", "txt", "html", "markdown", "epub", "docx", "hwpx", "xlsx", "png", "jpg"] },
-    ".hwpx":  { "extension": ".hwpx",  "mediaType": "application/hwp+zip", "targets": ["pdf", "txt", "html", "markdown", "epub", "docx", "xlsx", "png", "jpg"] },
-    ".mht":   { "extension": ".mht",   "mediaType": "multipart/related",   "targets": ["pdf", "txt", "html", "markdown", "epub", "docx", "hwpx", "xlsx", "png", "jpg"] },
-    ".mhtml": { "extension": ".mhtml", "mediaType": "multipart/related",   "targets": ["pdf", "txt", "html", "markdown", "epub", "docx", "hwpx", "xlsx", "png", "jpg"] }
+    ".hwp": {
+      "extension": ".hwp",
+      "mediaType": "application/x-hwp",
+      "targets": [
+        "pdf",
+        "txt",
+        "html",
+        "markdown",
+        "epub",
+        "docx",
+        "hwpx",
+        "xlsx",
+        "png",
+        "jpg"
+      ]
+    },
+    ".hwpx": {
+      "extension": ".hwpx",
+      "mediaType": "application/hwp+zip",
+      "targets": [
+        "pdf",
+        "txt",
+        "html",
+        "markdown",
+        "epub",
+        "docx",
+        "xlsx",
+        "png",
+        "jpg"
+      ]
+    },
+    ".mht": {
+      "extension": ".mht",
+      "mediaType": "multipart/related",
+      "targets": [
+        "pdf",
+        "txt",
+        "html",
+        "markdown",
+        "epub",
+        "docx",
+        "hwpx",
+        "xlsx",
+        "png",
+        "jpg"
+      ]
+    },
+    ".mhtml": {
+      "extension": ".mhtml",
+      "mediaType": "multipart/related",
+      "targets": [
+        "pdf",
+        "txt",
+        "html",
+        "markdown",
+        "epub",
+        "docx",
+        "hwpx",
+        "xlsx",
+        "png",
+        "jpg"
+      ]
+    },
+    ".xlsb": {
+      "extension": ".xlsb",
+      "family": "calc",
+      "mediaType": "application/vnd.ms-excel.sheet.binary.macroEnabled.12",
+      "targets": [
+        "pdf",
+        "xlsx",
+        "ods",
+        "csv",
+        "html"
+      ]
+    },
+    ".xltx": {
+      "extension": ".xltx",
+      "family": "calc",
+      "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.template",
+      "targets": [
+        "pdf",
+        "xlsx",
+        "ods",
+        "csv",
+        "html"
+      ]
+    },
+    ".xlt": {
+      "extension": ".xlt",
+      "family": "calc",
+      "mediaType": "application/vnd.ms-excel",
+      "targets": [
+        "pdf",
+        "xlsx",
+        "ods",
+        "csv",
+        "html"
+      ]
+    },
+    ".ots": {
+      "extension": ".ots",
+      "family": "calc",
+      "mediaType": "application/vnd.oasis.opendocument.spreadsheet-template",
+      "targets": [
+        "pdf",
+        "xlsx",
+        "ods",
+        "csv",
+        "html"
+      ]
+    },
+    ".fods": {
+      "extension": ".fods",
+      "family": "calc",
+      "mediaType": "application/vnd.oasis.opendocument.spreadsheet",
+      "targets": [
+        "pdf",
+        "xlsx",
+        "ods",
+        "csv",
+        "html"
+      ]
+    },
+    ".dotm": {
+      "extension": ".dotm",
+      "family": "writer",
+      "mediaType": "application/vnd.ms-word.template.macroEnabled.12",
+      "targets": [
+        "pdf",
+        "docx",
+        "odt",
+        "txt",
+        "html",
+        "rtf",
+        "epub"
+      ]
+    },
+    ".ott": {
+      "extension": ".ott",
+      "family": "writer",
+      "mediaType": "application/vnd.oasis.opendocument.text-template",
+      "targets": [
+        "pdf",
+        "docx",
+        "odt",
+        "txt",
+        "html",
+        "rtf",
+        "epub"
+      ]
+    },
+    ".fodt": {
+      "extension": ".fodt",
+      "family": "writer",
+      "mediaType": "application/vnd.oasis.opendocument.text",
+      "targets": [
+        "pdf",
+        "docx",
+        "odt",
+        "txt",
+        "html",
+        "rtf",
+        "epub"
+      ]
+    },
+    ".wps": {
+      "extension": ".wps",
+      "family": "writer",
+      "mediaType": "application/vnd.ms-works",
+      "targets": [
+        "pdf",
+        "docx",
+        "odt",
+        "txt",
+        "html",
+        "rtf",
+        "epub"
+      ]
+    },
+    ".wpd": {
+      "extension": ".wpd",
+      "family": "writer",
+      "mediaType": "application/vnd.wordperfect",
+      "targets": [
+        "pdf",
+        "docx",
+        "odt",
+        "txt",
+        "html",
+        "rtf",
+        "epub"
+      ]
+    },
+    ".pages": {
+      "extension": ".pages",
+      "family": "writer",
+      "mediaType": "application/vnd.apple.pages",
+      "targets": [
+        "pdf",
+        "docx",
+        "odt",
+        "txt",
+        "html",
+        "rtf",
+        "epub"
+      ]
+    },
+    ".otp": {
+      "extension": ".otp",
+      "family": "impress",
+      "mediaType": "application/vnd.oasis.opendocument.presentation-template",
+      "targets": [
+        "pdf",
+        "pptx",
+        "odp",
+        "png",
+        "jpg"
+      ]
+    },
+    ".fodp": {
+      "extension": ".fodp",
+      "family": "impress",
+      "mediaType": "application/vnd.oasis.opendocument.presentation",
+      "targets": [
+        "pdf",
+        "pptx",
+        "odp",
+        "png",
+        "jpg"
+      ]
+    },
+    ".vsd": {
+      "extension": ".vsd",
+      "family": "draw",
+      "mediaType": "application/vnd.visio",
+      "targets": [
+        "pdf"
+      ]
+    },
+    ".vsdx": {
+      "extension": ".vsdx",
+      "family": "draw",
+      "mediaType": "application/vnd.ms-visio.drawing",
+      "targets": [
+        "pdf"
+      ]
+    }
   },
   "media": {}
 }
