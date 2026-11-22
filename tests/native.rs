@@ -214,3 +214,63 @@ async fn run_path(src: &Path, target: &str) -> Vec<PathBuf> {
     assert!((png_size(&pngs[0]).0 as f32 - 793.7 * TEST_DPI as f32 / 72.0).abs() < 2.0, "slides render at the configured dpi");
     assert_eq!(run_path(&fixture("sample.xlsx"), "png").await.len(), 1);
 }
+
+async fn try_run_path(src: &Path, target: &str) -> converter_core::Result<Vec<PathBuf>> {
+    let cfg = Config::default();
+    let ext = formats::extension_of(src);
+    let conv = formats::resolve_conversion(&ext, target).unwrap();
+    let ws = std::env::temp_dir().join(format!("native-t-{}-{}-{}", std::process::id(), src.file_stem().unwrap().to_string_lossy(), target));
+    let out_dir = ws.join("out");
+    std::fs::create_dir_all(&out_dir).unwrap();
+    let input = ws.join(format!("input{ext}"));
+    std::fs::copy(src, &input).unwrap();
+    let ctx = Ctx { cfg: &cfg, workspace: ws.clone(), input, out_dir, profile_dir: ws.join("p"), timeout: cfg.convert_timeout, ocr: false };
+    native::run(&ctx, &conv).await
+}
+
+#[tokio::test] async fn libreoffice_made_pdf_to_markdown_keeps_structure() {
+    let md = std::fs::read_to_string(run_path(&fixture("lo-sample.pdf"), "markdown").await.remove(0)).unwrap();
+    for needle in ["# Quarterly Report", "## Highlights", "- First point", "1. Step one", "| Apples | 12 |", "| Pears | 7.5 |", "Ünïcödé 한국어."] {
+        assert!(md.contains(needle), "{needle:?} missing from:\n{md}");
+    }
+    let txt = std::fs::read_to_string(run_path(&fixture("lo-sample.pdf"), "txt").await.remove(0)).unwrap();
+    assert!(txt.contains("Quarterly Report") && txt.contains("The end."), "{txt}");
+}
+
+#[tokio::test] async fn pdf_tables_become_sheets_and_pdf_text_becomes_a_word_file() {
+    let xlsx = run_path(&fixture("lo-sample.pdf"), "xlsx").await.remove(0);
+    let wb = native::read::sheet::read(&xlsx, &Config::default()).unwrap();
+    assert_eq!(wb.sheets[0].rows, vec![vec!["Name", "Qty"], vec!["Apples", "12"], vec!["Pears", "7.5"]]);
+    let docx = run_path(&fixture("lo-sample.pdf"), "docx").await.remove(0);
+    let doc = native::read::docx::read(std::io::BufReader::new(std::fs::File::open(&docx).unwrap()), &Config::default()).unwrap();
+    assert_eq!(doc.tables().len(), 1);
+    assert_eq!(doc.first_heading().as_deref(), Some("Quarterly Report"));
+}
+
+#[tokio::test] async fn a_long_pdf_round_trips_every_word_and_every_table() {
+    // Our own PDF of the 6-section fixture -> Word -> compare with the original document's words and tables.
+    let pdf = big_pdf().await;
+    let back = run_path(&pdf, "docx").await.remove(0);
+    let cfg = Config::default();
+    let read = |p: &Path| native::read::docx::read(std::io::BufReader::new(std::fs::File::open(p).unwrap()), &cfg).unwrap();
+    let (orig, round) = (read(&fixture("big.docx")), read(&back));
+    let words = |d: &converter_core::native::model::Doc| {
+        let mut w: Vec<String> = native::write::text::to_txt(d).split_whitespace().map(|s| s.trim_matches(|c: char| !c.is_alphanumeric()).to_lowercase()).filter(|s| !s.is_empty()).collect();
+        w.sort(); w
+    };
+    assert_eq!(words(&orig), words(&round), "no word lost or invented");
+    assert_eq!(orig.tables().len(), round.tables().len(), "tables that cross a page are one table");
+}
+
+#[tokio::test] async fn pdf_without_tables_or_text_fails_with_a_clear_code() {
+    let e = try_run_path(&fixture("pic.docx"), "pdf").await.unwrap();
+    let nt = try_run_path(&e[0], "xlsx").await.unwrap_err();
+    assert_eq!(nt.code, converter_core::ErrorCode::ENoTables);
+    // A PDF that is only a picture has no selectable text: say so rather than return an empty file.
+    use converter_core::native::model::{Block, Doc};
+    let src = native::read::docx::read(std::io::BufReader::new(std::fs::File::open(fixture("pic.docx")).unwrap()), &Config::default()).unwrap();
+    let image = src.blocks.into_iter().find_map(|b| if let Block::Image(i) = b { Some(i) } else { None }).expect("fixture has a picture");
+    let pdf = native::write::pdf::doc_to_pdf(&Doc { blocks: vec![Block::Image(image)], ..Default::default() }, "scan").unwrap();
+    let err = native::read::pdf_text::read(pdf, 100).unwrap_err();
+    assert!(err.message.contains("no selectable text") && err.message.contains("OCR"), "{}", err.message);
+}

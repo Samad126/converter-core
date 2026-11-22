@@ -32,7 +32,7 @@ pub fn to_txt(doc: &Doc) -> String {
                 }
                 Block::Table(t) => {
                     counters.clear();
-                    for row in t.to_text() { out.push_str(&row.iter().map(|c| c.replace('\n', " ")).collect::<Vec<_>>().join("\t")); out.push('\n'); }
+                    for row in t.to_text().into_iter().filter(|r| r.iter().any(|c| !c.trim().is_empty())) { out.push_str(&row.iter().map(|c| c.replace('\n', " ")).collect::<Vec<_>>().join("\t")); out.push('\n'); }
                     out.push('\n');
                 }
                 Block::Image(_) | Block::PageBreak => counters.clear(),

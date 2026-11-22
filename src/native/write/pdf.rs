@@ -39,7 +39,7 @@ pub fn render(layout: &Layout, fonts: &FontSet, title: &str) -> Result<Vec<u8>> 
         for cmd in &p.cmds {
             match cmd {
                 Cmd::Text(piece, y) => {
-                    if piece.text.trim().is_empty() && !piece.underline { continue; }
+                    if piece.text.is_empty() { continue; }
                     surface.set_fill(Some(fill(piece.color)));
                     surface.set_stroke(None);
                     surface.draw_text(Point::from_xy(piece.x, *y), fonts.faces[piece.face].font.clone(), piece.size, &piece.text, false, TextDirection::Auto);

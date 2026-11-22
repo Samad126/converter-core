@@ -23,7 +23,7 @@ const SHEET: &[&str] = &[".xlsx", ".xlsm", ".xls", ".ods"];
 const PAIRS: &[(&[&str], &[&str])] = &[
     (WORD, &["txt", "html", "markdown", "epub", "pdf", "png", "jpg"]),
     (SLIDES, &["pdf", "txt", "html", "markdown", "png", "jpg"]),
-    (&[".pdf"], &["png", "jpg", "tiff", "cbz", "pptx"]),
+    (&[".pdf"], &["png", "jpg", "tiff", "cbz", "pptx", "txt", "markdown", "html", "docx", "xlsx"]),
     (SHEET, &["csv", "tsv", "json", "html", "xlsx", "ods", "pdf", "png", "jpg"]),
 ];
 
@@ -47,6 +47,7 @@ fn read(ctx: &Ctx<'_>, ext: &str) -> Result<Content> {
         let f = std::fs::File::open(&ctx.input)?;
         return read::pptx::read(std::io::BufReader::new(f), ctx.cfg).map(Content::Deck);
     }
+    if ext == ".pdf" { return read::pdf_text::read(std::fs::read(&ctx.input)?, ctx.cfg.max_raster_pages).map(Content::Doc); }
     if SHEET.contains(&ext) { return read::sheet::read(&ctx.input, ctx.cfg).map(Content::Book); }
     Err(Error::new(ErrorCode::EUnsupported, format!("No built-in reader for \"{ext}\".")))
 }
@@ -98,6 +99,14 @@ pub fn raster_pdf(cfg: &crate::Config, pdf: Vec<u8>, target_id: &str, out_dir: &
 
 fn is_page_target(id: &str) -> bool { matches!(id, "png" | "jpg" | "tiff" | "cbz" | "pptx") }
 
+/// The spreadsheet view of a result; a document with no tables has nothing to put in one.
+fn book_of(content: Content) -> Result<model::Workbook> {
+    if let Content::Doc(d) = &content {
+        if d.tables().is_empty() { return Err(Error::new(ErrorCode::ENoTables, "This document does not contain any tables.")); }
+    }
+    Ok(content.into_book())
+}
+
 fn write(content: Content, target: &str, out: &Path) -> Result<()> {
     use write::*;
     match target {
@@ -105,12 +114,13 @@ fn write(content: Content, target: &str, out: &Path) -> Result<()> {
         "markdown" => std::fs::write(out, text::to_markdown(&content.into_doc()))?,
         "html" => std::fs::write(out, html::to_html(&content.into_doc(), "Document"))?,
         "pdf" => std::fs::write(out, pdf_bytes(content)?)?,
+        "docx" => docx::write(&content.into_doc(), out)?,
         "epub" => epub::to_epub(&content.into_doc(), "Document", out)?,
-        "csv" => sheet::delimited(&content.into_book(), ',', out)?,
-        "tsv" => sheet::delimited(&content.into_book(), '\t', out)?,
-        "json" => sheet::json(&content.into_book(), out)?,
-        "xlsx" => sheet::xlsx(&content.into_book(), out)?,
-        "ods" => sheet::ods(&content.into_book(), out)?,
+        "csv" => sheet::delimited(&book_of(content)?, ',', out)?,
+        "tsv" => sheet::delimited(&book_of(content)?, '\t', out)?,
+        "json" => sheet::json(&book_of(content)?, out)?,
+        "xlsx" => sheet::xlsx(&book_of(content)?, out)?,
+        "ods" => sheet::ods(&book_of(content)?, out)?,
         other => return Err(Error::new(ErrorCode::EUnsupported, format!("No built-in writer for \"{other}\"."))),
     }
     Ok(())

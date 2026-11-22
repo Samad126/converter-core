@@ -1,5 +1,6 @@
 //! Built-in readers: open a file's own bytes and produce the neutral model.
 pub mod docx;
+pub mod pdf_text;
 pub mod pptx;
 pub mod sheet;
 
