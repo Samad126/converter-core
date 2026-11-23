@@ -38,7 +38,7 @@ pub const TOOLS: &[Tool] = &[
     Tool { name: "heif", used_for: "HEIC/HEIF photos", bins: &["heif-convert", "heif-convert.exe"], version_args: &[],
         hint_linux: "apt-get install -y libheif-examples", hint_macos: "brew install libheif", hint_windows: "no standard Windows build" },
     Tool { name: "zstd", used_for: ".zst / .tar.zst archives", bins: &["zstd", "zstd.exe"], version_args: &["--version"],
-        hint_linux: "apt-get install -y zstd", hint_macos: "brew install zstd", hint_windows: "winget install --id Facebook.Zstandard" },
+        hint_linux: "apt-get install -y zstd", hint_macos: "brew install zstd", hint_windows: "winget install --id Meta.Zstandard" },
     Tool { name: "assimp", used_for: "3D models (obj/stl/ply/glb/3mf)", bins: &["assimp", "assimp.exe"], version_args: &["version"],
         hint_linux: "apt-get install -y assimp-utils", hint_macos: "brew install assimp", hint_windows: "no standard winget package" },
     Tool { name: "calibre", used_for: "ebooks (epub/mobi/azw3/fb2/...)", bins: &["ebook-convert", "ebook-convert.exe"], version_args: &["--version"],
@@ -66,7 +66,18 @@ fn extra_dirs() -> Vec<PathBuf> {
         for d in ["/opt/homebrew/bin", "/usr/local/bin", "/Applications/LibreOffice.app/Contents/MacOS"] { v.push(d.into()); }
     }
     if cfg!(target_os = "windows") {
-        for d in [r"C:\Program Files\LibreOffice\program", r"C:\Program Files\7-Zip", r"C:\Program Files\calibre2"] { v.push(d.into()); }
+        for d in [r"C:\Program Files\LibreOffice\program", r"C:\Program Files\7-Zip", r"C:\Program Files\calibre2",
+                  r"C:\Program Files\Tesseract-OCR", r"C:\Program Files\Pandoc", r"C:\Program Files\Calibre2"] { v.push(d.into()); }
+        // winget installs that ship no PATH entry: portable-package shims, per-user Pandoc, and versioned qpdf folders.
+        if let Some(local) = std::env::var_os("LOCALAPPDATA").map(PathBuf::from) {
+            v.push(local.join(r"Microsoft\WinGet\Links"));
+            v.push(local.join("Pandoc"));
+        }
+        if let Ok(rd) = std::fs::read_dir(r"C:\Program Files") {
+            for e in rd.flatten() {
+                if e.file_name().to_string_lossy().to_lowercase().starts_with("qpdf") { v.push(e.path().join("bin")); }
+            }
+        }
     }
     v
 }
@@ -97,6 +108,14 @@ pub fn resolve(tool: &Tool, cfg: &Config, user_path: Option<&Path>) -> Option<Pa
     for bin in tool.bins {
         if let Ok(p) = which::which(bin) { return Some(p); }
         for d in extra_dirs() { let p = d.join(bin); if p.is_file() { return Some(p); } }
+    }
+    // winget unpacks some tools (Poppler, FFmpeg, zstd...) under Packages\<id>_<source>\<version>\... with no PATH entry or shim.
+    if cfg!(target_os = "windows") {
+        if let Some(pk) = std::env::var_os("LOCALAPPDATA").map(|l| PathBuf::from(l).join(r"Microsoft\WinGet\Packages")) {
+            for bin in tool.bins {
+                if let Some(p) = find_in_dir(&pk, bin, 4) { return Some(p); }
+            }
+        }
     }
     None
 }
